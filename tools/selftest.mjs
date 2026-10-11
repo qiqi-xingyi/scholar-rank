@@ -256,9 +256,30 @@ checkStats(
   '星号标注的连续作者可识别为共同一作',
 );
 checkStats(globalThis.SRStats.isFirstAuthor('Q Ding, Y Hu', ['Kuiye Ding', 'Q Ding']), '作者别名可补充一作识别');
+checkStats(
+  globalThis.SRStats.isFirstAuthor('J Liu, ZJ Zha, R Hong, M Wang, Y Zhang', 'Jiawei Liu (刘嘉威)'),
+  '实测主页 sR7Sf2YAAAAJ：带中文别名的主页姓名匹配 J Liu',
+);
+checkStats(
+  globalThis.SRStats.isFirstAuthor('J Liu, L Ji, Y Sun, Y Chiu, H Zhao', 'Jiawei Liu'),
+  '实测主页 rTtsJaAAAAAJ：Jiawei Liu 匹配 J Liu',
+);
+checkStats(
+  globalThis.SRStats.isFirstAuthor('刘嘉威、曾井展', 'Jiawei Liu (刘嘉威)'),
+  '括号内中文姓名作为独立别名并支持中文顿号作者列表',
+);
+checkStats(
+  globalThis.SRStats.isFirstAuthor('Other Author†, Jiawei Liu†, Third Author', 'Jiawei Liu'),
+  'dagger 标注的连续作者可识别为共同一作',
+);
 
 const parsedNames = globalThis.SRStats.profileNames('Ding, Kuiye\nK Ding；K Ding');
 checkStats(parsedNames.length === 2 && parsedNames[0] === 'Ding, Kuiye', '作者别名按行解析、去重并保留姓名中的逗号');
+const bilingualNames = globalThis.SRStats.profileNames('Jiawei Liu (刘嘉威)');
+checkStats(
+  bilingualNames.some((name) => name === '刘嘉威') && bilingualNames.some((name) => /Jiawei Liu/.test(name)),
+  '主页括号中的中英文姓名被展开为可匹配别名',
+);
 
 const filterItem = {
   authors: 'K Ding, Y Hu',

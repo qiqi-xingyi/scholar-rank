@@ -25,12 +25,35 @@
     return signatures;
   }
 
+  /**
+   * Scholar 主页名经常把另一种写法放在括号里，例如
+   * "Jiawei Liu (刘嘉威)"。括号内容不是普通备注，而是可用于作者匹配的别名；
+   * 同时保留完整写法，避免改变已有的英文缩写匹配行为。
+   */
+  function nameVariants(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return [];
+
+    const variants = [raw];
+    const withoutParentheses = raw
+      .replace(/\(([^()]*)\)|（([^（）]*)）/g, (_match, ascii, fullWidth) => {
+        const inner = String(ascii || fullWidth || '').trim();
+        if (inner) variants.push(inner);
+        return ' ';
+      })
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (withoutParentheses && withoutParentheses !== raw) variants.push(withoutParentheses);
+    return variants;
+  }
+
   function profileNames(value) {
     const values = Array.isArray(value) ? value : [value];
     const names = values
       .flatMap((item) => String(item || '').split(/\r?\n|[;；]+/))
       .map((item) => item.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .flatMap(nameVariants);
     const unique = new Map();
     for (const name of names) {
       const key = cleanPersonName(name);
@@ -42,13 +65,14 @@
   function firstAuthorNames(authorLine) {
     const parts = String(authorLine || '')
       .replace(/(?:…|\.\.\.).*$/, '')
-      .split(/[,，;]/)
+      .split(/[,，;、]/)
       .map((name) => name.trim())
       .filter(Boolean);
     if (!parts.length) return [];
 
-    const hasAsterisk = (name) => /[*＊∗★]/u.test(name);
-    const cleanMarker = (name) => name.replace(/[*＊∗★]+/gu, ' ').replace(/\s+/g, ' ').trim();
+    // 不同出版商会用星号、井号或 dagger 标记共同一作。
+    const hasAsterisk = (name) => /[*＊∗★#＃†‡]/u.test(name);
+    const cleanMarker = (name) => name.replace(/[*＊∗★#＃†‡]+/gu, ' ').replace(/\s+/g, ' ').trim();
     const names = [cleanMarker(parts[0])];
 
     // 首位作者带星号时，紧随其后的连续星号作者都视为共同一作。
