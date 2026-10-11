@@ -41,6 +41,8 @@
   // 每张卡片直接用它所代表的风格渲染同一组样例徽章，所见即所得。
   const SAMPLE = [
     ['ML三大顶会', 'sr-tag-rose'],
+    ['ABDC A*', 'sr-abdc'],
+    ['Nature Index 2026', 'sr-nature-index'],
     ['CCF A', 'sr-ccf-a'],
     ['CORE A*', 'sr-core-astar'],
     ['EI检索', 'sr-ei'],

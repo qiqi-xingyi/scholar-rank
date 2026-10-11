@@ -77,7 +77,8 @@
     if (!input) return [];
     let s = deburr(String(input)).toLowerCase();
     s = s.replace(/&/g, ' and ');
-    s = s.replace(/[^a-z0-9]+/g, ' ').trim();
+    // Keep CJK characters so Chinese journal titles can use the same exact-match path.
+    s = s.replace(/[^a-z0-9\u3400-\u9fff]+/g, ' ').trim();
     if (!s) return [];
     return s.split(' ').map((t) => ABBREV.get(t) ?? t).filter(Boolean);
   }

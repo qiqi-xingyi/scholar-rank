@@ -59,7 +59,15 @@ const CASES = [
   ['IEEE Internet of Things Journal 11 (3), 4000-4012', 'CCF C', 'SCI升级版 计算机科学2区'],
   ['Expert Systems with Applications 240, 122456', 'CCF C', 'SCI升级版 计算机科学1区'],
   ['Computers & Security 138, 103654', 'CCF B', 'SCI升级版 计算机科学2区'],
-  ['Nature 615 (7951), 234-240', 'SCI升级版 综合性期刊1区'],
+  ['Nature 615 (7951), 234-240', 'Nature Index 2026', 'SCI升级版 综合性期刊1区'],
+  // 经管期刊目录：同一本期刊可以同时命中多个独立评级体系。
+  ['Academy of Management Journal 66 (1), 1-20', 'ABDC A*', 'ABS 4*', 'AJG 2024 4*', 'UTD24', 'FT50', 'UTD24+Econ5', 'Nature Index 2026'],
+  ['The Accounting Review 98 (2), 1-24', 'ABDC A*', 'ABS 4*', 'AJG 2024 4*', 'UTD24', 'FT50', 'UTD24+Econ5'],
+  ['American Economic Review 113 (1), 1-30', 'ABDC A*', 'ABS 4*', 'AJG 2024 4*', 'FT50', 'UTD24+Econ5', 'Nature Index 2026'],
+  ['Human Relations 77 (4), 700-725', 'ABDC A*', 'ABS 4', 'AJG 2024 4', 'FT50'],
+  // 中文刊名必须保留中文字符参与精确匹配。
+  ['管理科学学报 27 (1), 1-15', '国自然管理学部 A'],
+  ['管理学报 21 (1), 1-10', '国自然管理学部 B'],
   // CORE 特有：CCF 目录里没有，但 CORE 收了
   ['Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision, 1-10', 'CORE A'],
   ['International Conference on Artificial Intelligence and Statistics, 100-110', 'CORE A'],
@@ -126,6 +134,8 @@ const NEGATIVE = [
 const FORBIDDEN = [
   ['Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 1-10', 'ML三大顶会', '数据库四大'],
   ['Nature 615 (7951), 234-240', 'ML三大顶会', '数据库四大', 'CCF', 'CORE'],
+  // Nature Index 当前统计 IROS，但它是会议，不属于“177 种期刊”徽章。
+  ['IEEE/RSJ International Conference on Intelligent Robots and Systems, 1-8', 'Nature Index 2026'],
   ['International Conference on Neural Information Processing, 1-10', 'ML三大顶会'],
   ['Advances in Neural Information Processing Systems 36, 1-12', '数据库四大', 'arXiv'],
   // 预印本只出平台徽章，绝不能带上任何分级

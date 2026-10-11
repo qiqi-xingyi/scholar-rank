@@ -53,6 +53,16 @@
 .sr-badges .sr-tag-violet { --sr-tint: #ddd0f8; --sr-key: #5a1b9c; }
 .sr-badges .sr-tag-slate { --sr-tint: #dfe3e8; --sr-key: #3a4653; }
 
+/* 经管与综合期刊目录 */
+.sr-badges .sr-abdc { --sr-tint: #d8eee2; --sr-key: #176b45; }
+.sr-badges .sr-abs { --sr-tint: #dce7f7; --sr-key: #245493; }
+.sr-badges .sr-ajg { --sr-tint: #e8dcf7; --sr-key: #6232a0; }
+.sr-badges .sr-utd24 { --sr-tint: #fde4c8; --sr-key: #9b4d00; }
+.sr-badges .sr-ft50 { --sr-tint: #f5d7df; --sr-key: #8e2947; }
+.sr-badges .sr-nsfc-management { --sr-tint: #d4eceb; --sr-key: #12635f; }
+.sr-badges .sr-management-econ { --sr-tint: #fae7ae; --sr-key: #765400; }
+.sr-badges .sr-nature-index { --sr-tint: #f5d5d2; --sr-key: #a02b22; }
+
 /* CORE 会议分级：靛蓝系的深浅梯度，和 CCF 的红/橙/蓝拉开距离 */
 .sr-badges .sr-core-astar { --sr-tint: #dcdafb; --sr-key: #3730a3; }
 .sr-badges .sr-core-a { --sr-tint: #e3e6fd; --sr-key: #4a55c8; }

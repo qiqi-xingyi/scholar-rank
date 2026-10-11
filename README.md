@@ -25,6 +25,11 @@
 | `ML三大顶会` `数据库四大` | 自定义标记，命中后排在最前面，可自己增删 |
 | `CCF A/B/C` | CCF 推荐国际学术会议和期刊目录（第七版，2026） |
 | `CORE A*/A/B/C` | 澳大利亚 CORE 会议分级（ICORE2026） |
+| `ABDC A*` `ABS 4*` `AJG 2024 4*` | ABDC 2025、ABS/AJG 2021 和 AJG 2024 商科期刊评级 |
+| `UTD24` `FT50` | UT Dallas 24 和 Financial Times 50 商科期刊目录 |
+| `国自然管理学部 A/B` | 国家自然科学基金委管理科学部认定的重要期刊 |
+| `UTD24+Econ5` | UTD24 与经济学五大刊的合并标记 |
+| `Nature Index 2026` | Nature Index 2026 的 177 种统计期刊 |
 | `计算机科学TOP` | 中科院分区表升级版的 TOP 期刊 |
 | `EI检索` | 被 EI Compendex 收录 |
 | `SCI升级版 计算机科学1区` | 中科院分区表升级版的大类分区 |
@@ -97,6 +102,11 @@
 | CORE Conference Rankings（ICORE2026） | [portal.core.edu.au](https://portal.core.edu.au/conf-ranks/) |
 | 中科院分区表升级版 2025、JCR 2025、国际期刊预警名单 2025 | [hitfyd/ShowJCR](https://github.com/hitfyd/ShowJCR) |
 | EI Compendex Source List | [HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST](https://github.com/HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST) |
+| ABDC Journal Quality List 2025 | [ABDC 官方目录](https://abdc.edu.au/abdc-journal-quality-list/) ｜ [公开结构化数据](https://github.com/P-M-Ferreira/ranking/tree/main/journal-ranking-app/data) |
+| ABS / Academic Journal Guide 2021、AJG 2024 | [Chartered ABS AJG](https://charteredabs.org/academic-journal-guide-2024/) ｜ [公开结构化数据](https://github.com/jusi-aalto/biz-journals) |
+| UTD24、FT50 | [UT Dallas 官方目录](https://jsom.utdallas.edu/the-utd-top-100-business-school-research-rankings/index.php) ｜ [FT50 结构化数据](https://github.com/jusi-aalto/biz-journals) |
+| 国家自然科学基金委管理科学部重要期刊 | [目录原文镜像](https://static.hhkaobo.com/upload/editor/72f47437-e6ba-4df1-8740-f48d95f519f6.pdf) |
+| Nature Index 2026 | [Nature Index 官方 FAQ 与期刊目录](https://www.nature.com/nature-index/faq) |
 
 感谢以上项目的整理工作。分区与影响因子数据归各自版权方所有，本项目只做离线聚合与展示。
 
@@ -111,7 +121,7 @@
   这样最容易定位问题。
 - 🔧 [提 PR](../../pulls) —— 补别名、加标记分组、修 Bug、加新网站支持都欢迎。
   大部分漏标只要往 `src/data/aliases.json` 补一行就能修好，不用动代码；
-  仓库带了 109 项回归测试，改完跑一下 `npm test` 即可。细节见
+  仓库带了 121 项回归测试，改完跑一下 `npm test` 即可。细节见
   [开发说明](docs/DEVELOPMENT.md)。
 
 如果觉得好用，点个 ⭐ 就是最大的支持。

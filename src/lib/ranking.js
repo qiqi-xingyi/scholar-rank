@@ -25,6 +25,14 @@
   const DEFAULTS = {
     showPreprint: true, // 预印本（arXiv / bioRxiv …），提示未经同行评审
     showTags: true,     // 自定义标记（如「ML三大顶会」）
+    showAbdc: true,     // ABDC Journal Quality List 2025
+    showAbs: true,      // ABS / AJG 2021
+    showAjg: true,      // Academic Journal Guide 2024
+    showUtd24: true,
+    showFt50: true,
+    showNsfcManagement: true,
+    showManagementEcon: true,
+    showNatureIndex: true,
     showCcf: true,
     showCore: true,     // CORE 会议分级（A*/A/B/C）
     showCas: true,      // 中科院分区（升级版）
@@ -89,6 +97,7 @@
 
       const journalData = data.journals;
       this.journals = (journalData && journalData.journals) || {};
+      this.journalAliases = (journalData && journalData.aliases) || {};
       this.journalMeta = { generatedAt: journalData && journalData.generatedAt, count: journalData && journalData.count };
       this.ccfMeta = { version: data.ccf && data.ccf.version, count: data.ccf && data.ccf.count };
       this.coreMeta = { version: data.core && data.core.version, count: data.core && data.core.count };
@@ -287,7 +296,12 @@
      */
     findFragment(names, openEnd) {
       if (!this.journalInfix) {
-        this.journalInfix = Ranking.infixItems(Object.values(this.journals).map((rec) => [rec.n, rec]), () => true);
+        const pairs = Object.values(this.journals).map((rec) => [rec.n, rec]);
+        for (const [name, target] of Object.entries(this.journalAliases)) {
+          const rec = this.journals[target];
+          if (rec) pairs.push([name, rec]);
+        }
+        this.journalInfix = Ranking.infixItems(pairs, () => true);
       }
       const pick = (list) => (list.length === 1 ? { entry: list[0], via: '截断片段匹配' } : null);
       for (const n of names) {
@@ -368,11 +382,19 @@
       // 开头被截掉的片段既不能精确匹配也不是前缀，理由同 findConf。
       if (cut && cut.head) return null;
       // 前缀索引只在遇到截断出处时才建，两万多条刊名不必每次启动都过一遍。
-      if (cut && !this.journalPairs) this.journalPairs = Ranking.prefixPairs(Object.entries(this.journals));
+      if (cut && !this.journalPairs) {
+        const pairs = Object.entries(this.journals);
+        for (const [name, target] of Object.entries(this.journalAliases)) {
+          const rec = this.journals[target];
+          if (rec) pairs.push([name, rec]);
+        }
+        this.journalPairs = Ranking.prefixPairs(pairs);
+      }
       for (const n of names) {
         const key = normalizeName(n);
-        if (key.length < this.options.minKeyLength) continue;
-        const rec = this.journals[key];
+        // 中文刊名常只有 4 个汉字（如“管理学报”）；精确匹配时不能套用英文最短长度。
+        if (key.length < this.options.minKeyLength && !/[\u3400-\u9fff]{2}/.test(key)) continue;
+        const rec = this.journals[key] || this.journals[this.journalAliases[key]];
         if (!rec) continue;
         // "Information …" 截断后恰好等于期刊 Information 的全名，但它更可能是 Information Sciences /
         // Information Fusion：名称没写完时，只有没有别的刊名以它开头才认。
@@ -480,6 +502,64 @@
         }
       }
 
+      const j = result.journal;
+      if (j) {
+        if (o.showAbdc && j.abdc) {
+          out.push({
+            key: 'abdc',
+            text: `ABDC ${j.abdc}`,
+            cls: 'sr-abdc',
+            title: `澳大利亚 ABDC Journal Quality List 2025：${j.abdc}\n${j.n}`,
+          });
+        }
+        if (o.showAbs && j.abs) {
+          out.push({
+            key: 'abs',
+            text: `ABS ${j.abs}`,
+            cls: 'sr-abs',
+            title: `ABS / Academic Journal Guide 2021：${j.abs}\n${j.n}`,
+          });
+        }
+        if (o.showAjg && j.ajg) {
+          out.push({
+            key: 'ajg',
+            text: `AJG 2024 ${j.ajg}`,
+            cls: 'sr-ajg',
+            title: `Academic Journal Guide 2024：${j.ajg}\n${j.n}`,
+          });
+        }
+        if (o.showUtd24 && j.utd24) {
+          out.push({ key: 'utd24', text: 'UTD24', cls: 'sr-utd24', title: `UT Dallas 24 顶级商科期刊\n${j.n}` });
+        }
+        if (o.showFt50 && j.ft50) {
+          out.push({ key: 'ft50', text: 'FT50', cls: 'sr-ft50', title: `Financial Times FT50 期刊\n${j.n}` });
+        }
+        if (o.showNsfcManagement && j.nsfcManagement) {
+          out.push({
+            key: 'nsfc-management',
+            text: `国自然管理学部 ${j.nsfcManagement}`,
+            cls: 'sr-nsfc-management',
+            title: `国家自然科学基金委管理科学部 ${j.nsfcManagement} 类重要期刊\n${j.n}`,
+          });
+        }
+        if (o.showManagementEcon && j.managementEcon) {
+          out.push({
+            key: 'management-econ',
+            text: 'UTD24+Econ5',
+            cls: 'sr-management-econ',
+            title: `管理经济期刊（UTD24 + 经济学五大刊）\n${j.n}`,
+          });
+        }
+        if (o.showNatureIndex && j.natureIndex) {
+          out.push({
+            key: 'nature-index',
+            text: 'Nature Index 2026',
+            cls: 'sr-nature-index',
+            title: `Nature Index 2026 统计期刊\n${j.n}`,
+          });
+        }
+      }
+
       const ccf = result.ccf;
       if (o.showCcf && ccf) {
         out.push({
@@ -502,7 +582,6 @@
         });
       }
 
-      const j = result.journal;
       if (!j) return out;
 
       if (o.showTop && j.top && j.cat) {
