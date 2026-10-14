@@ -1,8 +1,8 @@
 {
   "name": "scholar-rank",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "Chrome 扩展：在 Google Scholar 显示 CCF、中科院、ABDC、ABS/AJG、UTD24、FT50、Nature Index 等评级",
+  "description": "Journal JCR quartiles, CAS broad-category tiers, impact factors and TOP status; conference acronyms, CCF and CORE rankings on Google Scholar.",
   "type": "module",
   "scripts": {
     "build": "npm run build:ccf && npm run build:core && npm run build:journals && npm run build:icons",
@@ -10,8 +10,9 @@
     "build:core": "node tools/build-core.mjs",
     "build:journals": "node tools/build-journals.mjs",
     "build:icons": "node tools/make-icons.mjs",
-    "test": "node tools/selftest.mjs",
+    "test": "node tools/selftest.mjs && node tools/english-selftest.mjs",
     "probe": "node tools/lookup.mjs",
-    "serve": "node tools/serve.mjs"
+    "serve": "node tools/serve.mjs",
+    "package": "node tools/package.mjs"
   }
 }

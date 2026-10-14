@@ -11,7 +11,6 @@
 
   enabled.addEventListener('change', () => SRSettings.save({ enabled: enabled.checked }));
 
-  // 风格可以在弹窗里直接切，不用进设置页。
   for (const t of SRSettings.THEMES) {
     const opt = document.createElement('option');
     opt.value = t.id;
@@ -25,6 +24,7 @@
   function paintPreview() {
     preview.className = 'sr-badges ' + SRSettings.themeClass(themeSelect.value)
       + (settings.boldBadges ? ' sr-bold' : '');
+    SRSettings.applyBadgeScale(preview, settings.badgeScale);
   }
   paintPreview();
 
@@ -42,6 +42,6 @@
   const host = tab && tab.url ? new URL(tab.url).hostname : '';
   const supported = /^(scholar\.google\.|xueshu\.lanfanshu\.cn|scholar\.lanfanshu\.cn|sc\.panda985\.com)/.test(host);
   status.textContent = supported
-    ? '当前页面已在生效范围内。'
-    : '当前页面不是 Google Scholar，打开个人主页即可看到分级。';
+    ? 'Scholar Rank is active on this page.'
+    : 'Open a Google Scholar profile or search page to see rankings.';
 })();

@@ -1,5 +1,4 @@
-// 起一个最小静态服务器，用于打开 test/fixture.html 预览注入效果。
-// 用法: node tools/serve.mjs [端口]
+/** Local static preview server with a Chrome API shim and simulated Scholar citation responses. */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
@@ -21,8 +20,6 @@ const SHIM = '<script src="/test/chrome-shim.js"></script>';
 createServer(async (req, res) => {
   const [path, query = ''] = req.url.split('?');
   let url = decodeURIComponent(path);
-  // 模拟 Scholar 的「引用」接口（/scholar?q=info:<cid>:scholar.google.com/&output=cite），
-  // 返回 test/cite/<cid>.html，用来预览截断出处的补全。
   const cite = url === '/scholar' && /(?:^|&)q=info:([\w-]+):/.exec(decodeURIComponent(query));
   if (cite) url = `/test/cite/${cite[1]}.html`;
   const rel = normalize(url === '/' ? '/test/fixture.html' : url).replace(/^([/\\])+/, '');
@@ -30,7 +27,6 @@ createServer(async (req, res) => {
   if (!file.startsWith(ROOT)) { res.writeHead(403).end('forbidden'); return; }
   try {
     let body = await readFile(file);
-    // ?shim=1：在 <head> 之后注入 chrome.* 垫片，用来在浏览器里直接预览设置页 / 弹窗。
     if (extname(file) === '.html' && /(^|&)shim=1(&|$)/.test(query)) {
       body = Buffer.from(body.toString('utf8').replace(/<head>/i, '<head>' + SHIM), 'utf8');
     }
@@ -41,7 +37,7 @@ createServer(async (req, res) => {
     res.end('404 ' + rel);
   }
 }).listen(PORT, () => {
-  console.log(`论文列表预览: http://localhost:${PORT}/test/fixture.html`);
-  console.log(`设置页预览:   http://localhost:${PORT}/src/options/options.html?shim=1`);
-  console.log(`弹窗预览:     http://localhost:${PORT}/src/popup/popup.html?shim=1`);
+  console.log(`Publication preview: http://localhost:${PORT}/test/fixture.html`);
+  console.log(`Settings preview:   http://localhost:${PORT}/src/options/options.html?shim=1`);
+  console.log(`Popup preview:     http://localhost:${PORT}/src/popup/popup.html?shim=1`);
 });

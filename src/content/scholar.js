@@ -1,16 +1,9 @@
-﻿/**
- * Google Scholar 页面注入：找到每条文献的「出处」，查表后在其上方插入分级徽章。
- *
- * 覆盖三处：
- *   1. 个人主页论文列表   #gsc_a_b tr.gsc_a_tr
- *   2. 搜索结果 / 引用列表 / 相关文章  .gs_a
- *   3. 单篇论文详情浮层   #gsc_vcd_table 里的「期刊 / 会议 / 来源」字段
- */
+/** Annotate Scholar profiles, search/cited-by results and publication details. Render profile statistics and observe newly loaded rows. */
 (function () {
   'use strict';
 
-  const MARK = 'srDone';           // dataset 标记，避免重复注入
-  const PENDING = 'srPending';     // dataset 标记，正在等完整刊名
+  const MARK = 'srDone';
+  const PENDING = 'srPending';
   const CONTAINER_CLASS = 'sr-badges';
   const STATS_PANEL_CLASS = 'sr-stats-panel';
 
@@ -23,11 +16,10 @@
 
   async function loadJson(path) {
     const res = await fetch(chrome.runtime.getURL(path));
-    if (!res.ok) throw new Error(`无法读取 ${path}: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`Unable to read ${path}: HTTP ${res.status}`);
     return res.json();
   }
 
-  /** 取节点纯文本，但排除 Scholar 用来放年份的 .gs_oph（", 2024"）。 */
   function venueTextOf(node) {
     const clone = node.cloneNode(true);
     clone.querySelectorAll('.gs_oph, .' + CONTAINER_CLASS).forEach((el) => el.remove());
@@ -39,14 +31,12 @@
     const badges = ranking.badges(result);
     if (!badges.length) {
       if (!settings.showUnmatched || result.kind !== 'normal') return null;
-      badges.push({ key: 'none', text: '未收录', cls: 'sr-none', title: `未在本地数据集中匹配到：${venue}` });
+      badges.push({ key: 'none', text: 'Unmatched', cls: 'sr-none', title: `No local dataset match: ${venue}` });
     }
     const box = document.createElement('div');
     box.className = CONTAINER_CLASS + ' ' + SRSettings.themeClass(settings.theme)
       + (settings.boldBadges ? ' sr-bold' : '');
-    if (settings.badgeScale && settings.badgeScale !== 100) {
-      box.style.fontSize = (11 * settings.badgeScale / 100).toFixed(1) + 'px';
-    }
+    SRSettings.applyBadgeScale(box, settings.badgeScale);
     for (const b of badges) {
       const span = document.createElement('span');
       span.className = `sr-badge ${b.cls}`;
@@ -57,10 +47,6 @@
     return box;
   }
 
-  /**
-   * 在 anchor 之前（before=true）或之后插入徽章行。
-   * venues 可以给多个候选出处，取第一个能出徽章的。
-   */
   function inject(host, venues, anchor, before) {
     if (host.dataset[MARK]) return;
     host.dataset[MARK] = '1';
@@ -87,7 +73,6 @@
     };
   }
 
-  // ---- 1. 个人主页论文列表 ----
   function annotateProfile() {
     if (!settings.showOnProfile) return;
     for (const row of document.querySelectorAll('#gsc_a_b tr.gsc_a_tr')) {
@@ -133,40 +118,40 @@
     if (!panel) {
       panel = document.createElement('aside');
       panel.className = STATS_PANEL_CLASS;
-      panel.setAttribute('aria-label', '论文统计');
+      panel.setAttribute('aria-label', 'Publication statistics');
       panel.innerHTML = `
         <div class="sr-stats-header">
-          <span>论文统计</span>
-          <span class="sr-stats-toggle" role="button" tabindex="0" aria-label="收起论文统计" aria-expanded="true">−</span>
+          <span>Publication statistics</span>
+          <span class="sr-stats-toggle" role="button" tabindex="0" aria-label="Collapse publication statistics" aria-expanded="true">−</span>
         </div>
         <div class="sr-stats-body">
           <div class="sr-stats-total">
-            当前已加载 <strong data-stat="total">0</strong> 篇
-            <span data-stat-wrap="visible" hidden> · 显示 <strong data-stat="visible">0</strong> 篇</span>
+            Loaded <strong data-stat="total">0</strong> publications
+            <span data-stat-wrap="visible" hidden> · Showing <strong data-stat="visible">0</strong></span>
           </div>
-          <div class="sr-stats-title">CCF 分类</div>
+          <div class="sr-stats-title">CCF rankings</div>
           <div class="sr-stats-grid sr-stats-grid-ccf">
-            <span class="sr-stat sr-stat-a" data-filter="ccf-a" role="button" tabindex="0" aria-pressed="false"><span>A 类</span><strong data-stat="ccf-a">0</strong></span>
-            <span class="sr-stat sr-stat-b" data-filter="ccf-b" role="button" tabindex="0" aria-pressed="false"><span>B 类</span><strong data-stat="ccf-b">0</strong></span>
-            <span class="sr-stat sr-stat-c" data-filter="ccf-c" role="button" tabindex="0" aria-pressed="false"><span>C 类</span><strong data-stat="ccf-c">0</strong></span>
+            <span class="sr-stat sr-stat-a" data-filter="ccf-a" role="button" tabindex="0" aria-pressed="false"><span>A</span><strong data-stat="ccf-a">0</strong></span>
+            <span class="sr-stat sr-stat-b" data-filter="ccf-b" role="button" tabindex="0" aria-pressed="false"><span>B</span><strong data-stat="ccf-b">0</strong></span>
+            <span class="sr-stat sr-stat-c" data-filter="ccf-c" role="button" tabindex="0" aria-pressed="false"><span>C</span><strong data-stat="ccf-c">0</strong></span>
           </div>
-          <div class="sr-stats-title">中科院分区</div>
+          <div class="sr-stats-title">CAS tiers</div>
           <div class="sr-stats-grid sr-stats-grid-zone">
-            <span class="sr-stat sr-stat-z1" data-filter="zone-1" role="button" tabindex="0" aria-pressed="false"><span>1 区</span><strong data-stat="zone-1">0</strong></span>
-            <span class="sr-stat sr-stat-z2" data-filter="zone-2" role="button" tabindex="0" aria-pressed="false"><span>2 区</span><strong data-stat="zone-2">0</strong></span>
-            <span class="sr-stat sr-stat-z3" data-filter="zone-3" role="button" tabindex="0" aria-pressed="false"><span>3 区</span><strong data-stat="zone-3">0</strong></span>
-            <span class="sr-stat sr-stat-z4" data-filter="zone-4" role="button" tabindex="0" aria-pressed="false"><span>4 区</span><strong data-stat="zone-4">0</strong></span>
+            <span class="sr-stat sr-stat-z1" data-filter="zone-1" role="button" tabindex="0" aria-pressed="false"><span>Tier 1</span><strong data-stat="zone-1">0</strong></span>
+            <span class="sr-stat sr-stat-z2" data-filter="zone-2" role="button" tabindex="0" aria-pressed="false"><span>Tier 2</span><strong data-stat="zone-2">0</strong></span>
+            <span class="sr-stat sr-stat-z3" data-filter="zone-3" role="button" tabindex="0" aria-pressed="false"><span>Tier 3</span><strong data-stat="zone-3">0</strong></span>
+            <span class="sr-stat sr-stat-z4" data-filter="zone-4" role="button" tabindex="0" aria-pressed="false"><span>Tier 4</span><strong data-stat="zone-4">0</strong></span>
           </div>
-          <span class="sr-stats-first" data-filter="first" role="button" tabindex="0" aria-pressed="false"><span>一作论文</span><strong data-stat="first">0</strong></span>
-          <button type="button" class="sr-load-all">加载全部论文</button>
+          <span class="sr-stats-first" data-filter="first" role="button" tabindex="0" aria-pressed="false"><span>First-author papers</span><strong data-stat="first">0</strong></span>
+          <button type="button" class="sr-load-all">Load all publications</button>
           <div class="sr-load-status" data-stat="load-status" role="status"></div>
-          <div class="sr-stats-note" data-stat="note">点击分类可筛选 · 支持 * 标注的共同一作</div>
+          <div class="sr-stats-note" data-stat="note">Click a category to filter · Includes marked co-first authors</div>
         </div>`;
       const toggleStats = (event) => {
         const collapsed = panel.classList.toggle('sr-stats-collapsed');
         event.currentTarget.textContent = collapsed ? '+' : '−';
         event.currentTarget.setAttribute('aria-expanded', String(!collapsed));
-        event.currentTarget.setAttribute('aria-label', collapsed ? '展开论文统计' : '收起论文统计');
+        event.currentTarget.setAttribute('aria-label', collapsed ? 'Expand publication statistics' : 'Collapse publication statistics');
       };
       const toggle = panel.querySelector('.sr-stats-toggle');
       toggle.addEventListener('click', toggleStats);
@@ -192,7 +177,7 @@
       panel.querySelector('.sr-load-all').addEventListener('click', () => {
         if (loadAllRunning) {
           loadAllCancelled = true;
-          loadAllState = '正在停止…';
+          loadAllState = 'Stopping…';
           updateLoadAllControl(panel);
         } else {
           void loadAllPapers();
@@ -248,11 +233,11 @@
     const button = panel && panel.querySelector('.sr-load-all');
     if (!button) return;
 
-    let label = '加载全部论文';
+    let label = 'Load all publications';
     let disabled = false;
-    if (loadAllRunning) label = loadAllCancelled ? '正在停止…' : `停止自动加载（${profileEntries().length} 篇）`;
-    else if (!canLoadMore()) { label = '已加载全部'; disabled = true; }
-    else if (loadAllState) label = '继续加载全部';
+    if (loadAllRunning) label = loadAllCancelled ? 'Stopping…' : `Stop loading (${profileEntries().length} publications)`;
+    else if (!canLoadMore()) { label = 'All publications loaded'; disabled = true; }
+    else if (loadAllState) label = 'Continue loading';
 
     if (button.textContent !== label) button.textContent = label;
     button.disabled = disabled;
@@ -280,7 +265,7 @@
     if (loadAllRunning || !canLoadMore()) return;
     loadAllRunning = true;
     loadAllCancelled = false;
-    loadAllState = '正在自动加载，点击按钮可停止';
+    loadAllState = 'Loading publications; click the button to stop';
     renderProfileStats();
 
     let pages = 0;
@@ -293,19 +278,19 @@
         const after = await waitForRowGrowth(before);
         if (loadAllCancelled) break;
         if (after <= before) {
-          loadAllState = '加载超时，请检查网络后重试';
+          loadAllState = 'Loading timed out. Check your connection and retry.';
           break;
         }
         annotateAll();
         await shortDelay(500);
       }
 
-      if (loadAllCancelled) loadAllState = '已停止自动加载';
-      else if (pages >= 200) loadAllState = '已达到单次加载上限（200 页）';
-      else if (!canLoadMore()) loadAllState = '全部论文已加载';
+      if (loadAllCancelled) loadAllState = 'Loading stopped';
+      else if (pages >= 200) loadAllState = 'Reached the limit of 200 pages per run';
+      else if (!canLoadMore()) loadAllState = 'All publications loaded';
     } catch (err) {
-      loadAllState = '加载失败，请稍后重试';
-      console.error('[学术分级标注] 自动加载失败:', err);
+      loadAllState = 'Loading failed. Please retry.';
+      console.error('[Scholar Rank] Auto-loading failed:', err);
     } finally {
       loadAllRunning = false;
       loadAllCancelled = false;
@@ -348,14 +333,11 @@
       button.tabIndex = disabled ? -1 : 0;
     }
     setStat(panel, 'note', summary.firstAuthorAvailable
-      ? '点击分类可筛选 · 支持 * 标注的共同一作'
-      : '未识别主页姓名，可在设置中添加作者别名');
+      ? 'Click a category to filter · Includes marked co-first authors'
+      : 'Profile name unavailable. Add an author alias in Settings.');
     updateLoadAllControl(panel);
   }
 
-  // ---- 2. 搜索结果 / 引用列表 / 相关文章 ----
-  // .gs_a 形如 "X Yang, K Ding… - IEEE Transactions on …, 2026 - ieeexplore.ieee.org"
-  // 具体拆法见 SRNorm.venuesFromByline（放在 lib 里是为了能进回归测试）。
   function annotateSearch() {
     if (!settings.showOnSearch) return;
     for (const meta of document.querySelectorAll('.gs_a')) {
@@ -365,7 +347,6 @@
       const cid = settings.resolveTruncated && truncatedUnmatched(venues) && citeIdOf(meta);
       if (!cid) { inject(meta, venues, meta, false); continue; }
 
-      // 先占位，免得请求返回之前被重复处理；ticket 用来作废设置变更前发出的旧请求。
       meta.dataset[MARK] = '1';
       const ticket = meta.dataset[PENDING] = String(++pendingSeq);
       fullVenueOf(cid).then((full) => {
@@ -378,23 +359,18 @@
     }
   }
 
-  // ---- 2b. 截断出处补全 ----
-  // 作者一多，.gs_a 里的出处会被截成 "Information …"，光凭剩下的词认不出是哪本刊。
-  // 每条结果的「引用」浮层里有完整刊名，这里替用户取一次：走页面同源的接口，串行、带间隔，
-  // 结果按标签页缓存；一旦取不到（验证码 / 限流），本页就不再尝试。
   const CITE_GAP_MS = 400;
   const CITE_STORE_PREFIX = 'sr-cite:';
-  const citeJobs = new Map();      // cid -> Promise<string>，取不到时为空串
+  const citeJobs = new Map();
   let citeTail = Promise.resolve();
   let citeBlocked = false;
   let pendingSeq = 0;
 
-  /** 出处被截断、且现有信息在三套数据里都对不上时，才值得去取完整刊名。 */
   function truncatedUnmatched(venues) {
     let truncated = false;
     for (const v of venues) {
       const r = ranking.lookup(v);
-      if (r.kind !== 'normal' || r.ccf || r.core || r.journal) return false;
+      if (r.kind !== 'normal' || r.ccf || r.core || r.journal || r.conference) return false;
       if (r.truncated) truncated = true;
     }
     return truncated;
@@ -412,9 +388,7 @@
       const res = await fetch(`/scholar?q=info:${cid}:scholar.google.com/&output=cite&scirp=0&hl=en`, { credentials: 'same-origin' });
       const doc = res.ok ? new DOMParser().parseFromString(await res.text(), 'text/html') : null;
       const formats = doc ? [...doc.querySelectorAll('.gs_citr')] : [];
-      // 一条引用格式都没有，说明被 Scholar 拦下了，继续请求只会更糟。
       if (!formats.length) { citeBlocked = true; return ''; }
-      // MLA 排在最前，刊名 / 会议名是其中唯一的斜体；GB/T 7714 没有斜体，跳过。
       const italic = formats.map((f) => f.querySelector('i')).find(Boolean);
       return italic ? italic.textContent.replace(/\s+/g, ' ').trim() : '';
     } catch (err) {
@@ -426,14 +400,14 @@
   function fullVenueOf(cid) {
     if (citeJobs.has(cid)) return citeJobs.get(cid);
     let stored = null;
-    try { stored = sessionStorage.getItem(CITE_STORE_PREFIX + cid); } catch (err) { /* 存储不可用就每次都取 */ }
+    try { stored = sessionStorage.getItem(CITE_STORE_PREFIX + cid); } catch (err) {  }
     let job;
     if (stored !== null) {
       job = Promise.resolve(stored);
     } else {
       job = citeTail.then(() => fetchCiteVenue(cid)).then((venue) => {
         if (!citeBlocked) {
-          try { sessionStorage.setItem(CITE_STORE_PREFIX + cid, venue); } catch (err) { /* 同上 */ }
+          try { sessionStorage.setItem(CITE_STORE_PREFIX + cid, venue); } catch (err) {  }
         }
         return venue;
       });
@@ -443,7 +417,6 @@
     return job;
   }
 
-  // ---- 3. 单篇论文详情浮层 ----
   const DETAIL_FIELDS = new Set([
     '期刊', '会议', '来源', '图书', '刊物',
     'journal', 'conference', 'source', 'book', 'publication',
@@ -472,11 +445,10 @@
       annotateSearch();
       annotateDetail();
     } catch (err) {
-      console.error('[学术分级标注] 注入失败:', err);
+      console.error('[Scholar Rank] Annotation failed:', err);
     }
   }
 
-  /** 清掉已注入的徽章，用于设置变更后重绘。 */
   function clearAll() {
     loadAllCancelled = true;
     activeProfileFilter = null;
@@ -501,14 +473,13 @@
     settings = await SRSettings.load();
     if (!settings.enabled) return;
 
-    const [ccf, core, journals, aliases, tags] = await Promise.all([
+    const [ccf, core, journals, aliases] = await Promise.all([
       loadJson('src/data/ccf.json'),
       loadJson('src/data/core.json'),
       loadJson('src/data/journals.json'),
       loadJson('src/data/aliases.json'),
-      loadJson('src/data/tags.json'),
     ]);
-    ranking = new SRRanking({ ccf, core, journals, aliases, tags }, settings);
+    ranking = new SRRanking({ ccf, core, journals, aliases }, settings);
 
     annotateAll();
     observe();
@@ -523,5 +494,5 @@
     });
   }
 
-  main().catch((err) => console.error('[学术分级标注] 初始化失败:', err));
+  main().catch((err) => console.error('[Scholar Rank] Initialization failed:', err));
 })();

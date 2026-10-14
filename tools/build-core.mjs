@@ -1,10 +1,6 @@
-// 抓取 CORE Conference Rankings（澳大利亚 CORE 会议分级）并生成离线 JSON。
+/** Download the CORE portal export and build offline conference rankings. CORE_SOURCE selects the source version; nonacademic rank categories are not displayed. */
 //
-// 数据来自 https://portal.core.edu.au/conf-ranks/ 页面上的 Export 按钮，
-// 它是一个 GET 接口，会一次性导出该版本的全部会议（忽略分页）。
 //
-// 用法: node tools/build-core.mjs [输出路径]
-//   环境变量 CORE_SOURCE 可指定版本，默认 ICORE2026。
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
@@ -15,25 +11,23 @@ const OUT = resolve(process.argv[2] ?? join(__dirname, '..', 'src', 'data', 'cor
 const SOURCE = process.env.CORE_SOURCE ?? 'ICORE2026';
 const URL_ = `https://portal.core.edu.au/conf-ranks/?search=&by=all&source=${SOURCE}&sort=atitle&page=1&do=Export`;
 
-// CORE 用 ANZSRC 2020 的 Field of Research 代码标注领域，导出的 CSV 里只有数字。
 const FOR_NAMES = {
-  4601: '应用计算',
-  4602: '人工智能',
-  4603: '计算机视觉与多媒体计算',
-  4604: '网络空间安全',
-  4605: '数据管理与数据科学',
-  4606: '分布式计算与系统软件',
-  4607: '图形学、增强现实与游戏',
-  4608: '人机交互',
-  4609: '信息系统',
-  4610: '图书情报学',
-  4611: '机器学习',
-  4612: '软件工程',
-  4613: '计算理论',
-  CSE: '计算机科学与工程（旧分类）',
+  4601: 'Applied Computing',
+  4602: 'Artificial Intelligence',
+  4603: 'Computer Vision & Multimedia Computing',
+  4604: 'Cybersecurity',
+  4605: 'Data Management & Data Science',
+  4606: 'Distributed Computing & Systems Software',
+  4607: 'Graphics, Augmented Reality & Games',
+  4608: 'Human-Computer Interaction',
+  4609: 'Information Systems',
+  4610: 'Library & Information Science',
+  4611: 'Machine Learning',
+  4612: 'Software Engineering',
+  4613: 'Theory of Computation',
+  CSE: 'Computer Science & Engineering (legacy)',
 };
 
-/** 最小 CSV 解析器：支持引号包裹、引号内逗号与换行、"" 转义。 */
 function parseCSV(text) {
   const rows = [];
   let row = [];
@@ -55,10 +49,6 @@ function parseCSV(text) {
   return rows;
 }
 
-/**
- * CORE 门户里的 Rank 字段写法很乱（National:China / National: China / unranked / Unranked …），
- * 这里统一成扩展只需要认识的几档，原始值留在 rankRaw 里给 tooltip 用。
- */
 function normalizeRank(raw) {
   const s = raw.replace(/\s+/g, ' ').trim();
   if (/^a\*$/i.test(s)) return 'A*';
@@ -77,7 +67,6 @@ const res = await fetch(URL_);
 if (!res.ok) throw new Error(`${URL_} -> HTTP ${res.status}`);
 const csv = await res.text();
 
-// 导出的 CSV 没有表头，列依次是：
 // id, Title, Acronym, Source, Rank, DBLP(Yes/No), FoR1, FoR2, FoR3
 const entries = [];
 const rankCount = {};
@@ -99,7 +88,7 @@ for (const cols of parseCSV(csv)) {
   entries.push(entry);
 }
 
-if (!entries.length) throw new Error('导出内容为空，CORE 门户的接口可能变了');
+if (!entries.length) throw new Error('Empty CORE export; the source endpoint may have changed');
 
 const payload = {
   source: `https://portal.core.edu.au/conf-ranks/ (${SOURCE})`,
@@ -112,6 +101,6 @@ const payload = {
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(payload), 'utf8');
 
-console.log(`写入 ${OUT}`);
-console.log(`  共 ${entries.length} 条（${SOURCE}）`);
-console.log('  等级分布:', Object.entries(rankCount).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}=${v}`).join('  '));
+console.log(`Wrote ${OUT}`);
+console.log(`  ${entries.length} entries (${SOURCE})`);
+console.log('  Rank distribution:', Object.entries(rankCount).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}=${v}`).join('  '));

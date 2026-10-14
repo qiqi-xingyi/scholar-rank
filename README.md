@@ -1,127 +1,98 @@
-<div align="center">
+# Scholar Rank
 
-# 学术分级标注 · Scholar Rank
+English edition · Version 1.2.0
 
-**打开 Google Scholar，每篇论文下面直接标出期刊和会议的级别。**
+A Chrome / Edge extension that displays journal metrics and conference rankings directly on Google Scholar. The extension interface, badges, tooltips, settings and statistics are in English.
 
-![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4)
-![Chrome | Edge](https://img.shields.io/badge/Chrome%20%7C%20Edge-支持-34A853)
-![数据](https://img.shields.io/badge/数据-全离线·不联网-6E56CF)
-![免配置](https://img.shields.io/badge/无需注册-无需%20API%20Key-orange)
+Open the [local preview](http://localhost:8123/test/fixture.html) after starting `npm run serve`.
 
-![效果预览](docs/preview.png)
+## Default badges
 
-<sub>示意图中的论文均为真实论文，被引次数取自 Semantic Scholar（2026-07-28）</sub>
-
-</div>
-
-## 这是什么
-
-看别人（或者自己）的 Google Scholar 主页时，一眼分不清哪篇是顶会顶刊、哪篇是水刊。
-这个扩展会在每篇论文的作者行下面插一排徽章，把级别直接标出来：
-
-| 徽章 | 含义 |
+| Publication type | Displayed information |
 | --- | --- |
-| `ML三大顶会` `数据库四大` | 自定义标记，命中后排在最前面，可自己增删 |
-| `CCF A/B/C` | CCF 推荐国际学术会议和期刊目录（第七版，2026） |
-| `CORE A*/A/B/C` | 澳大利亚 CORE 会议分级（ICORE2026） |
-| `ABDC A*` `ABS 4*` `AJG 2024 4*` | ABDC 2025、ABS/AJG 2021 和 AJG 2024 商科期刊评级 |
-| `UTD24` `FT50` | UT Dallas 24 和 Financial Times 50 商科期刊目录 |
-| `国自然管理学部 A/B` | 国家自然科学基金委管理科学部认定的重要期刊 |
-| `UTD24+Econ5` | UTD24 与经济学五大刊的合并标记 |
-| `Nature Index 2026` | Nature Index 2026 的 177 种统计期刊 |
-| `计算机科学TOP` | 中科院分区表升级版的 TOP 期刊 |
-| `EI检索` | 被 EI Compendex 收录 |
-| `SCI升级版 计算机科学1区` | 中科院分区表升级版的大类分区 |
-| `IF 8.7` | JCR 影响因子（另可开启 JCR 分区 Q1–Q4） |
-| `预警 论文工厂` | 中科院国际期刊预警名单 |
-| `arXiv` `bioRxiv` | 预印本，提示这篇还没经过同行评审 |
+| Journal | Name or acronym for selected journals, JCR quartile (Q1–Q4), CAS broad-category tier (1–4), impact factor, and CAS TOP / Non-TOP status |
+| Conference | Conference acronym, CCF ranking (A/B/C), and CORE ranking (A*/A/B/C or a supported Australasian tier) |
+| Preprint | Preprint server label, without journal or conference rankings |
 
-鼠标悬停在徽章上能看到完整信息：会议全称、所属领域、小类分区、收录库等。
-预印本会标出所在平台（arXiv / bioRxiv / medRxiv / SSRN …）但不参与分级；学位论文、专利则直接跳过。
+For example, CVPR displays `CVPR`, `CCF A`, and `CORE A*`. A journal can display `TIFS`, `JCR Q1`, `CAS 1`, `IF 8.7`, and `TOP`.
 
-**个人主页、搜索结果页、引用列表、相关文章、单篇论文详情浮层都会标注**，
-翻页或点「显示更多」新加载的条目会自动补上。
-个人主页右侧的引用信息栏还会显示论文统计，汇总当前已加载论文中的 CCF A/B/C、中科院 1–4 区和一作数量；
-点击任一分类即可筛选论文，再点一次恢复全部。统计区可以自动连续点击 Scholar 的「显示更多」来加载完整列表，
-并显示进度、支持随时停止；一作识别默认使用主页姓名，也可以在设置中逐行添加姓名别名，
-开头连续用 `*`、`#`、`†` 或 `‡` 标注的作者会按共同一作统计；主页姓名括号内的中英文别名也会自动参与匹配。
+Only available data is displayed. An absent TOP status is not interpreted as Non-TOP. CAS tiers and JCR quartiles are separate classification systems. Subcategory badges and custom group tags have been removed.
 
-几个特点：
+Conference recognition includes publisher-prefixed and historical spellings such as `IEEE S&P`, `MM`, `ESEC/FSE` and `USENIX ATC`. [COLM](https://colm.cc/Conferences/2025) and [RSS](https://roboticsconference.org/2025/) can display their names when absent from the bundled ranking directories; no CCF or CORE tier is inferred. [WHC](https://2025.worldhaptics.org/) fills a missing CCF source acronym.
 
-- **全离线**。所有数据都打包在扩展里，不上传任何浏览数据，也不需要注册或 API Key。
-  唯一会发出的请求是向 Scholar 自己：搜索结果里出处被截成 `Information …` 又认不出时，
-  取一次该条目的「引用」格式来拿完整刊名（相当于替你点了「引用」），可在设置里关掉。
-- **匹配够扎实**。Google Scholar 的出处写法极不统一（`Journal of machine learning research 12, 2825-2830`、
-  `ICASSP 2015-2015 IEEE International Conference on Acoustics, Speech and …`、
-  `Proceedings of the ACM on Management of Data`），扩展会剥掉卷期页码和各种前后缀再匹配，
-  被 Scholar 截断的出处也能认出来；实在拿不准时宁可不显示，也不瞎标。
-- **外观可选**。6 种风格（柔和填充 / 描边 / 实心 / 极简文字 / 方角标签 / 低调灰阶），
-  每种徽章都能单独开关，字号可调。
+Selected journals display their name or acronym before their metrics: Nature, Science, Cell, Nat. Commun., Sci. Adv., PNAS, JMLR, TPAMI, TIFS, TIP, TKDE, TOG and IJCV. Full names and curated shortened venue spellings are recognized. The optional **Journal name / acronym** switch hides the name badge without affecting metrics. The list is maintained in `src/data/aliases.json` under `journalNames`; unrelated publications such as PNAS Nexus and national-academy journals from other countries do not inherit the PNAS label.
 
-## 安装
+The extension covers profile publication lists, search results, cited-by lists, related articles, and publication details. Newly loaded publications are annotated automatically.
 
-还没上架应用商店，用开发者模式加载，一分钟搞定：
+## Installation
 
-1. **下载并解压**——点仓库右上角绿色的 `Code → Download ZIP`，解压出一个文件夹。
+1. Clone or download and extract this repository.
+2. Open `chrome://extensions/` or `edge://extensions/`.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the repository folder containing `manifest.json`.
+5. Open a Google Scholar profile or search page.
 
-2. **打开扩展管理页**——Chrome 是 `chrome://extensions/`，Edge 是 `edge://extensions/`。
+The datasets are already included; no dependency installation or data build is required. `npm run package` creates a distributable ZIP and a clean unpacked folder under `dist/`. After editing the code, reload the extension from the extensions page, then refresh Scholar.
 
-3. **打开右上角的「开发者模式」开关**（不打开的话拖进去没反应）。
+## Settings and statistics
 
-4. **把解压出来的文件夹直接拖到这个页面上**，松手即安装完成。
+Click the extension icon to enable or disable Scholar Rank, choose a theme, or open **Settings**. Settings include badge visibility, six appearance styles, font size, bold text, author aliases, and a venue matching test.
 
-5. 打开任意 Google Scholar 页面，例如个人主页 `scholar.google.com/citations?user=XXXX`
-   或搜索结果页，徽章会自动出现。
+The badge list is limited to the journal and conference metrics above. Removed options cannot be re-enabled by older saved preferences. Preprint labels and unmatched-venue diagnostics remain available. The default Clean style emphasizes the venue name and displays compact 10.5px metrics separated by subtle dots, without colored metric boxes. CAS tiers are displayed as CAS 1–4 and TOP status as TOP / Non-TOP; full category names remain in tooltips. Alternative badge styles remain available.
 
-> [!TIP]
-> - **要拖文件夹，不是拖 ZIP。** 浏览器只认解压后的目录，压缩包拖进去不会有反应。
-> - 拖进去的那一层必须**直接包含 `manifest.json`**。GitHub 的 ZIP 解压后一般是
->   `scholar-rank-main/`，拖它就对了；如果解压出来还套了一层，就往里进一层再拖。
-> - 数据文件已经随仓库提供，**装完即用**，不需要执行任何构建命令。
-> - 装好后别删掉这个文件夹，浏览器是直接从原地加载的。以后更新代码，回到扩展管理页
->   点一下卡片上的刷新按钮即可。
+Profile statistics count currently loaded publications by CCF ranking, CAS tier and first authorship. Click a category to filter the list. **Load all publications** automatically clicks Scholar’s “Show more” button and can be stopped at any time. First-author recognition uses the profile name and configured aliases, including names in parentheses and marked co-first authors.
 
-习惯命令行的话，`git clone` 下来再拖同一个文件夹也行。
+Matching uses local bundled datasets. Optional truncated-venue resolution fetches Scholar’s own citation format when a venue cannot otherwise be identified. Those requests are queued, spaced apart and cached per tab.
 
-支持 `scholar.google.*` 的常见国家域名，以及 `xueshu.lanfanshu.cn`、`sc.panda985.com` 等常用镜像。
+## Development
 
-## 设置
+This project uses plain JavaScript, HTML and CSS with a Manifest V3 extension. Browser scripts expose shared helpers through `globalThis`; Node tools reuse the same matching logic.
 
-点击浏览器工具栏上的扩展图标可以快速开关、切换外观风格；点「打开设置」进入完整设置页，
-可以逐个开关徽章、调整字号、添加一作姓名别名、查看当前打包的数据版本。
-
-设置页还带一个**匹配自测**框：把 Scholar 上的出处原文粘进去，立刻能看到它命中了哪条记录、
-走的是哪条匹配路径——遇到没标上的论文，用这个排查最快。
-
-## 数据来源
-
-| 数据 | 来源 |
+| Location | Responsibility |
 | --- | --- |
-| CCF 推荐目录 2026（第七版） | [ccf.atom.im](https://ccf.atom.im/) ｜ [官方原文](https://www.ccf.org.cn/Academic_Evaluation/By_category/) |
-| CORE Conference Rankings（ICORE2026） | [portal.core.edu.au](https://portal.core.edu.au/conf-ranks/) |
-| 中科院分区表升级版 2025、JCR 2025、国际期刊预警名单 2025 | [hitfyd/ShowJCR](https://github.com/hitfyd/ShowJCR) |
-| EI Compendex Source List | [HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST](https://github.com/HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST) |
-| ABDC Journal Quality List 2025 | [ABDC 官方目录](https://abdc.edu.au/abdc-journal-quality-list/) ｜ [公开结构化数据](https://github.com/P-M-Ferreira/ranking/tree/main/journal-ranking-app/data) |
-| ABS / Academic Journal Guide 2021、AJG 2024 | [Chartered ABS AJG](https://charteredabs.org/academic-journal-guide-2024/) ｜ [公开结构化数据](https://github.com/jusi-aalto/biz-journals) |
-| UTD24、FT50 | [UT Dallas 官方目录](https://jsom.utdallas.edu/the-utd-top-100-business-school-research-rankings/index.php) ｜ [FT50 结构化数据](https://github.com/jusi-aalto/biz-journals) |
-| 国家自然科学基金委管理科学部重要期刊 | [目录原文镜像](https://static.hhkaobo.com/upload/editor/72f47437-e6ba-4df1-8740-f48d95f519f6.pdf) |
-| Nature Index 2026 | [Nature Index 官方 FAQ 与期刊目录](https://www.nature.com/nature-index/faq) |
+| `manifest.json` | Extension configuration and script entry points |
+| `src/lib/normalize.js` | Venue normalization, candidate names and preprint detection |
+| `src/lib/ranking.js` | Matching, display defaults, English field labels and badge descriptions |
+| `src/lib/stats.js` | Author recognition, publication summaries and filters |
+| `src/lib/settings.js` | Shared settings defaults, themes and storage |
+| `src/content/scholar.js` | Scholar page annotation, statistics panel and automatic loading |
+| `src/content/badges.css` | Badges, themes and statistics styles |
+| `src/options/` / `src/popup/` | Settings and extension popup |
+| `src/data/` | Bundled rankings, journal data and aliases |
+| `tools/cas-data.mjs` | Source CSV parsing and English CAS broad-category metadata |
+| `tools/build-journals.mjs` | Merged journal dataset generation |
+| `test/fixture.html` | Offline Scholar page preview |
 
-感谢以上项目的整理工作。分区与影响因子数据归各自版权方所有，本项目只做离线聚合与展示。
+```sh
+npm test                       # Matching/statistics regressions and English badge/data checks
+npm run probe -- "CVPR"         # Inspect one venue
+npm run serve                  # Local preview on port 8123
+npm run build                  # Refresh rankings, journal data and icons
+npm run package                # Clean unpacked directory and ZIP under dist/
+```
 
-⚠️ 匹配基于刊名字符串，个别同名、改名、新刊可能匹配不到或匹配错；EI 目录是目前公开可得的最新完整版本（2019），
-只能当参考。**用于职称评定、学位审核等正式场合时，请务必以官方发布为准并自行核对。**
+Local previews:
 
-## 参与贡献
+- `http://localhost:8123/test/fixture.html`
+- `http://localhost:8123/src/options/options.html?shim=1`
+- `http://localhost:8123/src/popup/popup.html?shim=1`
 
-发现某篇论文没标上、标错了，或者想加新的分级体系、新的自定义标记，都非常欢迎：
+Data-building tools cache downloads in `tools/.cache/`. To add a venue spelling, update `src/data/aliases.json`. Named alias objects can specify the intended full name when an acronym is shared. `missingAcronyms` fills absent source acronyms, `displayAcronyms` standardizes labels, and `extraConferences` adds verified names without inventing rankings. Run the tests after changing matching rules or aliases.
 
-- 🐛 [提 Issue](../../issues) —— 请把 Scholar 上那条**出处原文**贴上（设置页的「匹配自测」框里可以直接复制），
-  这样最容易定位问题。
-- 🔧 [提 PR](../../pulls) —— 补别名、加标记分组、修 Bug、加新网站支持都欢迎。
-  大部分漏标只要往 `src/data/aliases.json` 补一行就能修好，不用动代码；
-  仓库带了 121 项回归测试，改完跑一下 `npm test` 即可。细节见
-  [开发说明](docs/DEVELOPMENT.md)。
+## Bundled data sources
 
-如果觉得好用，点个 ⭐ 就是最大的支持。
+| Data | Source |
+| --- | --- |
+| CCF recommended list 2026 | [ccf.atom.im](https://ccf.atom.im/) and [CCF](https://www.ccf.org.cn/Academic_Evaluation/By_category/) |
+| CORE ICORE2026 | [CORE portal](https://portal.core.edu.au/conf-ranks/) |
+| CAS tiers, JCR metrics and journal warnings 2025 | [hitfyd/ShowJCR](https://github.com/hitfyd/ShowJCR) |
+| EI Compendex list 2019 | [EI source list](https://github.com/HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST) |
+| ABDC 2025 and AJG 2024 | [Structured ranking data](https://github.com/P-M-Ferreira/ranking/tree/main/journal-ranking-app/data) |
+| ABS/AJG 2021 and FT50 | [Business journal data](https://github.com/jusi-aalto/biz-journals) |
+| UTD24 | [UT Dallas](https://jsom.utdallas.edu/the-utd-top-100-business-school-research-rankings/index.php) |
+| NSFC management journals | [List mirror](https://static.hhkaobo.com/upload/editor/72f47437-e6ba-4df1-8740-f48d95f519f6.pdf) |
+| Nature Index 2026 | [Nature Index](https://www.nature.com/nature-index/faq) |
+
+Data rights remain with their respective owners. Venue matching can be ambiguous; verify official records for formal evaluations. Dataset versions are listed in Settings.
+
+[Development guide](docs/DEVELOPMENT.md)

@@ -1,5 +1,5 @@
 {
-  "comment": "Google Scholar 上的出处写法与 CCF 目录官方名称对不上的常见情况。key 会经 normalizeName 归一化后再匹配。",
+  "comment": "Curated source-name aliases shared by CCF and CORE matching; keys use the shared venue normalizer.",
   "names": {
     "Advances in Neural Information Processing Systems": "NeurIPS",
     "Advances in Neural Information Processing System": "NeurIPS",
@@ -60,7 +60,41 @@
     "ACM Conference on Human Factors in Computing Systems": "CHI",
     "CHI Conference on Human Factors in Computing Systems": "CHI",
     "IEEE International Conference on Computer Communications": "INFOCOM",
-    "IEEE Conference on Computer Communications": "INFOCOM"
+    "IEEE Conference on Computer Communications": "INFOCOM",
+    "World Haptics Conference": "WHC",
+    "IEEE World Haptics": "WHC",
+    "World Haptics": "WHC",
+    "ACM Multimedia": "ACM MM",
+    "ACM Conference on Multimedia": "ACM MM",
+    "ACM KDD": "SIGKDD",
+    "IEEE S&P": "S&P",
+    "IEEE SP": "S&P",
+    "USENIX SEC": "USENIX Security",
+    "USENIX ATC": "ACM SIGOPS ATC",
+    "IEEE CVPR": "CVPR",
+    "IEEE ICCV": "ICCV",
+    "ACM SIGOPS Symposium on Operating Systems Principles": "SOSP",
+    "ACM European Conference on Computer Systems": "EuroSys",
+    "ACM SIGPLAN Symposium on Principles of Programming Languages": "POPL",
+    "ACM SIGPLAN Conference on Object-Oriented Programming, Systems, Languages, and Applications": "OOPSLA",
+    "ACM SIGPLAN Conference on Functional Programming": "ICFP",
+    "ACM SIGIR Conference on Research and Development in Information Retrieval": "SIGIR",
+    "ESEC/FSE": {
+      "abbr": "FSE",
+      "name": "ACM International Conference on the Foundations of Software Engineering"
+    },
+    "ESEC-FSE": {
+      "abbr": "FSE",
+      "name": "ACM International Conference on the Foundations of Software Engineering"
+    },
+    "ACM ESEC/FSE": {
+      "abbr": "FSE",
+      "name": "ACM International Conference on the Foundations of Software Engineering"
+    },
+    "ACM SIGSOFT Symposium on the Foundations of Software Engineering": {
+      "abbr": "FSE",
+      "name": "ACM International Conference on the Foundations of Software Engineering"
+    }
   },
   "acronyms": {
     "NIPS": "NeurIPS",
@@ -68,9 +102,10 @@
     "PVLDB": "VLDB",
     "KDD": "SIGKDD",
     "ACMMM": "ACM MM",
-    "ATC": "ACM SIGOPS ATC"
+    "ATC": "ACM SIGOPS ATC",
+    "MM": "ACM MM"
   },
-  "coreNamesComment": "只对 CORE 目录生效的别名（这些会议 CCF 目录里没有，或 CORE 记的全称差得比较远）。值直接填 CORE 的简称。",
+  "coreNamesComment": "Aliases specific to the CORE directory; values use CORE acronyms directly.",
   "coreNames": {
     "IEEE/CVF Winter Conference on Applications of Computer Vision": "WACV",
     "Winter Conference on Applications of Computer Vision": "WACV",
@@ -80,12 +115,146 @@
     "ACM SIGMOD-SIGACT-SIGAI Symposium on Principles of Database Systems": "PODS",
     "Symposium on Principles of Database Systems": "PODS"
   },
-  "ccfToCoreComment": "上面两张表填的是 CCF 简称；同一个会议在 CORE 目录里简称不同的，在下表做一次翻译。",
+  "ccfToCoreComment": "Map CCF acronym spellings to their CORE equivalents.",
   "ccfToCore": {
     "SIGKDD": "KDD",
     "S&P": "SP",
     "ACM MM": "ACMMM",
     "USENIX Security": "USENIX-Security",
     "ACM SIGOPS ATC": "USENIX"
-  }
+  },
+  "missingAcronyms": {
+    "IEEE World Haptics Conference": "WHC"
+  },
+  "displayAcronyms": {
+    "SIGKDD": "KDD",
+    "ACMMM": "ACM MM",
+    "ACM SIGOPS ATC": "USENIX ATC",
+    "USENIX": "USENIX ATC",
+    "USENIX-Security": "USENIX Security",
+    "SP": "S&P"
+  },
+  "extraConferences": [
+    {
+      "abbr": "COLM",
+      "name": "Conference on Language Modeling",
+      "names": [
+        "Conference on Language Modelling",
+        "COLM Conference"
+      ],
+      "source": "https://colm.cc/Conferences/2025"
+    },
+    {
+      "abbr": "RSS",
+      "name": "Robotics: Science and Systems",
+      "names": [
+        "Robotics Science and Systems Conference",
+        "RSS Conference"
+      ],
+      "source": "https://roboticsconference.org/2025/"
+    }
+  ],
+  "supplementComment": "Official conference names absent from the bundled directories. Recognition only: no CCF or CORE rank is inferred. Named alias objects disambiguate shared acronyms such as software-engineering FSE versus Fast Software Encryption.",
+  "missingAcronymsSource": "https://2025.worldhaptics.org/",
+  "journalNames": [
+    {
+      "abbr": "PNAS",
+      "name": "Proceedings of the National Academy of Sciences of the United States of America",
+      "names": [
+        "Proceedings of the National Academy of Sciences",
+        "Proc. Natl. Acad. Sci. USA",
+        "Proc. Natl. Acad. Sci. U.S.A.",
+        "Proc Natl Acad Sci U S A",
+        "PNAS USA"
+      ],
+      "source": "https://www.nasonline.org/publications/"
+    },
+    {
+      "abbr": "JMLR",
+      "name": "Journal of Machine Learning Research",
+      "names": [],
+      "source": "http://dblp.uni-trier.de/db/journals/jmlr/"
+    },
+    {
+      "abbr": "TPAMI",
+      "name": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "names": [
+        "IEEE TPAMI"
+      ],
+      "source": "http://dblp.uni-trier.de/db/journals/pami/"
+    },
+    {
+      "abbr": "TIFS",
+      "name": "IEEE Transactions on Information Forensics and Security",
+      "names": [
+        "IEEE TIFS"
+      ],
+      "source": "http://dblp.uni-trier.de/db/journals/tifs/"
+    },
+    {
+      "abbr": "TIP",
+      "name": "IEEE Transactions on Image Processing",
+      "names": [
+        "IEEE TIP"
+      ],
+      "source": "http://dblp.uni-trier.de/db/journals/tip/"
+    },
+    {
+      "abbr": "TKDE",
+      "name": "IEEE Transactions on Knowledge and Data Engineering",
+      "names": [
+        "IEEE TKDE"
+      ],
+      "source": "http://dblp.uni-trier.de/db/journals/tkde/"
+    },
+    {
+      "abbr": "TOG",
+      "name": "ACM Transactions on Graphics",
+      "names": [
+        "ACM TOG"
+      ],
+      "source": "http://dblp.uni-trier.de/db/journals/tog/"
+    },
+    {
+      "abbr": "IJCV",
+      "name": "International Journal of Computer Vision",
+      "names": [],
+      "source": "http://dblp.uni-trier.de/db/journals/ijcv/"
+    },
+    {
+      "abbr": "Nature",
+      "name": "Nature",
+      "names": []
+    },
+    {
+      "abbr": "Science",
+      "name": "Science",
+      "names": []
+    },
+    {
+      "abbr": "Cell",
+      "name": "Cell",
+      "names": []
+    },
+    {
+      "abbr": "Nat. Commun.",
+      "name": "Nature Communications",
+      "names": [
+        "Nat Commun",
+        "Nature Commun.",
+        "Nature Comm."
+      ],
+      "source": "https://www.nature.com/ncomms/aims"
+    },
+    {
+      "abbr": "Sci. Adv.",
+      "name": "Science Advances",
+      "names": [
+        "Sci Adv",
+        "Science Adv."
+      ],
+      "source": "https://www.ncbi.nlm.nih.gov/nlmcatalog/101653440"
+    }
+  ],
+  "journalNamesComment": "Display names or acronyms for selected journals. Match exact names and explicitly listed aliases only; do not derive labels from arbitrary journal titles."
 }

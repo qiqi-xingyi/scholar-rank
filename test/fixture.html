@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>离线预览：Google Scholar 个人主页结构</title>
+  <title>Scholar Rank · Google Scholar preview</title>
   <link rel="stylesheet" href="../src/content/badges.css">
   <style>
-    body { font: 13px/1.4 Roboto, Arial, "PingFang SC", sans-serif; color: #222; margin: 24px; max-width: 900px; }
+    body { font: 13px/1.4 Roboto, Arial, "PingFang SC", sans-serif; color: #222; margin: 24px; max-width: 1180px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; column-gap: 32px; }
     h1 { font-size: 16px; font-weight: 500; }
     p.note { color: #666; font-size: 12px; }
     #gsc_a_b { width: 100%; border-collapse: collapse; }
@@ -14,15 +14,17 @@
     .gsc_a_at { color: #1a0dab; text-decoration: none; font-size: 13px; }
     .gs_gray { color: #777; font-size: 12px; }
     .gsc_a_c, .gsc_a_y { text-align: right; color: #777; width: 11%; }
-    button { min-width: 72px; height: 29px; } /* 模拟 Scholar 会污染普通按钮的全局样式 */
-    #gsc_rsb { position: fixed; top: 24px; right: 24px; width: 280px; background: #fff; }
+    button { min-width: 72px; height: 29px; }
+    #gsc_rsb { position: sticky; top: 24px; grid-column: 2; grid-row: 1 / span 20; align-self: start; width: 280px; background: #fff; }
+    body > :not(#gsc_rsb) { grid-column: 1; min-width: 0; }
+    @media (max-width: 680px) { body { display: block; } #gsc_rsb { position: static; width: 100%; margin-bottom: 24px; } }
     .gsc_rsb_h { padding-bottom: 10px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
     #gsc_rsb_st { width: 100%; margin-top: 8px; border-collapse: collapse; }
     #gsc_rsb_st td { padding: 2px 8px; text-align: right; }
     #gsc_rsb_st td:first-child { text-align: left; }
     #gsc_g { height: 86px; margin-top: 14px; border-bottom: 1px solid #dadce0; background: linear-gradient(to top, #777 0 64%, transparent 64% 100%) right 20px bottom / 15px 74px no-repeat; }
-    /* ?bare=1：只留论文列表，用来生成 README 里的效果图 */
-    body.bare { margin: 12px 16px; }
+
+    body.bare { margin: 12px 16px; display: block; }
     body.bare h1, body.bare p.note, body.bare #gs_res_ccl_mid, body.bare #gsc_rsb { display: none; }
   </style>
   <script>
@@ -36,29 +38,36 @@
   <div id="gsc_prf_in" hidden>Kaiming He</div>
   <aside id="gsc_rsb">
     <section class="gsc_rsb_s">
-      <div class="gsc_rsb_h">引用次数</div>
+      <div class="gsc_rsb_h">Cited by</div>
       <table id="gsc_rsb_st">
-        <tr><td></td><td>总计</td><td>2021 年至今</td></tr>
-        <tr><td>引用</td><td>119</td><td>119</td></tr>
-        <tr><td>h 指数</td><td>6</td><td>6</td></tr>
-        <tr><td>i10 指数</td><td>6</td><td>6</td></tr>
+        <tr><td></td><td>All</td><td>Since 2021</td></tr>
+        <tr><td>Citations</td><td>119</td><td>119</td></tr>
+        <tr><td>h-index</td><td>6</td><td>6</td></tr>
+        <tr><td>i10-index</td><td>6</td><td>6</td></tr>
       </table>
-      <div id="gsc_g" aria-label="引用次数图表"></div>
+      <div id="gsc_g" aria-label="Citation chart"></div>
     </section>
   </aside>
-  <h1>离线预览：Google Scholar 个人主页结构</h1>
-  <p class="note">
-    这个页面复刻了 Scholar 个人主页的 DOM 结构，并用一套假的 <code>chrome.*</code> API 直接跑真实的 content script，
-    用来在不打开 Scholar 的情况下检查徽章渲染效果。需通过 <code>node tools/serve.mjs</code> 起的本地服务打开。
-  </p>
-  <p class="note">
-    下面都是真实论文，被引次数取自 Semantic Scholar（2026-07-28 查询）。Google Scholar 自己的计数通常更高，
-    这里只是为了让示意图里的数字不是编的。
-  </p>
+  <h1>Scholar Rank · Google Scholar preview</h1>
+  <p class="note">Offline preview using the actual extension scripts and a simulated Google Scholar page.</p>
+  <p class="note">Profile examples are real; citation counts are from Semantic Scholar (July 28, 2026).</p>
+
+  <section id="journal-preview" style="margin:8px 0 16px">
+    <h2 style="font-size:12px;font-weight:500;color:#64748b;margin:0 0 8px">Journal label examples</h2>
+    <div class="gs_ri" style="margin-bottom:10px">
+      <div class="gs_a gs_gray">Example Author - Nature Communications, 2025 - nature.com</div>
+    </div>
+    <div class="gs_ri" style="margin-bottom:10px">
+      <div class="gs_a gs_gray">Example Author - Science Advances, 2025 - science.org</div>
+    </div>
+    <div class="gs_ri">
+      <div class="gs_a gs_gray">Example Author - PNAS, 2025 - pnas.org</div>
+    </div>
+  </section>
 
   <table id="gsc_a_b">
     <tbody>
-      <!-- 期刊：CCF A + 中科院 TOP + 1 区 + EI + IF，徽章最全的一行 -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">Faster R-CNN: Towards real-time object detection with region proposal networks</a>
@@ -68,7 +77,7 @@
         <td class="gsc_a_c">74363</td>
         <td class="gsc_a_y">2017</td>
       </tr>
-      <!-- 期刊：CCF A 但中科院只有 4 区，正是这个扩展想帮人看清的情况 -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">Scikit-learn: Machine learning in Python</a>
@@ -78,7 +87,7 @@
         <td class="gsc_a_c">92028</td>
         <td class="gsc_a_y">2011</td>
       </tr>
-      <!-- 会议：CCF + CORE 两套目录各自出徽章 -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">Deep residual learning for image recognition</a>
@@ -88,7 +97,7 @@
         <td class="gsc_a_c">234778</td>
         <td class="gsc_a_y">2016</td>
       </tr>
-      <!-- 自定义标记：ML三大顶会 -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">An image is worth 16x16 words: Transformers for image recognition at scale</a>
@@ -98,7 +107,7 @@
         <td class="gsc_a_c">66859</td>
         <td class="gsc_a_y">2021</td>
       </tr>
-      <!-- 自定义标记：数据库四大；同时验证 SIGMOD 会议录的写法 -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">The case for learned index structures</a>
@@ -108,7 +117,7 @@
         <td class="gsc_a_c">1265</td>
         <td class="gsc_a_y">2018</td>
       </tr>
-      <!-- 预印本：单独标出平台名，不参与分级 -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">Llama 2: Open foundation and fine-tuned chat models</a>
@@ -118,7 +127,7 @@
         <td class="gsc_a_c">17723</td>
         <td class="gsc_a_y">2023</td>
       </tr>
-      <!-- 被 Scholar 截断的出处：靠前导简称认出 ICASSP -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">Librispeech: An ASR corpus based on public domain audio books</a>
@@ -128,7 +137,7 @@
         <td class="gsc_a_c">8220</td>
         <td class="gsc_a_y">2015</td>
       </tr>
-      <!-- 被截断的会议全称：靠唯一前缀匹配认出 NAACL -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">BERT: Pre-training of deep bidirectional transformers for language understanding</a>
@@ -138,7 +147,7 @@
         <td class="gsc_a_c">118477</td>
         <td class="gsc_a_y">2019</td>
       </tr>
-      <!-- 综合性期刊：没有 CCF，但有中科院分区和 IF -->
+
       <tr class="gsc_a_tr">
         <td class="gsc_a_t">
           <a class="gsc_a_at">Highly accurate protein structure prediction with AlphaFold</a>
@@ -151,74 +160,79 @@
     </tbody>
   </table>
 
-  <h1 style="margin-top:36px">搜索结果结构</h1>
-  <p class="note">
-    复刻 <code>scholar.google.com/scholar?q=…</code> 的结构：<code>.gs_a</code> 用不换行空格包住的短横线
-    分成「作者 - 出处, 年份 - 站点」，但站点段可能缺失、刊名本身也可能带短横线。
-  </p>
+  <h1 style="margin-top:36px">Search results</h1>
+  <p class="note">Search results support venue matching and optional truncated-name resolution.</p>
+
   <div id="gs_res_ccl_mid">
-    <!-- 标准三段 -->
+    <div class="gs_r gs_or gs_scl">
+      <div class="gs_ri">
+        <h3 class="gs_rt"><a>[Example] PNAS journal short-name matching</a></h3>
+        <div class="gs_a">Example Author - Proceedings of the National Academy of Sciences, 2024 - pnas.org</div>
+        <div class="gs_rs">Demonstration of a journal acronym followed by its bundled metrics.</div>
+      </div>
+    </div>
+
     <div class="gs_r gs_or gs_scl">
       <div class="gs_ri">
         <h3 class="gs_rt"><a>Squeeze-and-excitation networks</a></h3>
         <div class="gs_a">J Hu, L Shen, G Sun&nbsp;-&nbsp;IEEE transactions on pattern analysis and machine intelligence, 2019&nbsp;-&nbsp;ieeexplore.ieee.org</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
-    <!-- 出处是链接（Scholar 常见） -->
+
     <div class="gs_r gs_or gs_scl">
       <div class="gs_ri">
         <h3 class="gs_rt"><a>Generative agents: Interactive simulacra of human behavior</a></h3>
         <div class="gs_a">JS Park, J O'Brien, CJ Cai…&nbsp;-&nbsp;<a>Proceedings of the 36th annual ACM symposium on user interface software and technology</a>, 2023&nbsp;-&nbsp;dl.acm.org</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
-    <!-- 预印本 -->
+
     <div class="gs_r gs_or gs_scl">
       <div class="gs_ri">
         <h3 class="gs_rt"><a>MemGPT: Towards LLMs as operating systems</a></h3>
         <div class="gs_a">C Packer, S Wooders, K Lin, V Fang…&nbsp;-&nbsp;arXiv preprint arXiv:2310.08560, 2023&nbsp;-&nbsp;arxiv.org</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
-    <!-- 没有站点段 -->
+
     <div class="gs_r gs_or gs_scl">
       <div class="gs_ri">
         <h3 class="gs_rt"><a>Reflexion: Language agents with verbal reinforcement learning</a></h3>
         <div class="gs_a">N Shinn, F Cassano, A Gopinath…&nbsp;-&nbsp;Advances in neural information processing systems, 2023</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
-    <!-- 刊名自带短横线 -->
+
     <div class="gs_r gs_or gs_scl">
       <div class="gs_ri">
         <h3 class="gs_rt"><a>Human-level control through deep reinforcement learning</a></h3>
         <div class="gs_a">V Mnih, K Kavukcuoglu, D Silver…&nbsp;-&nbsp;Nature, 2015&nbsp;-&nbsp;nature.com</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
-    <!-- 只有作者和年份（图书条目） -->
+
     <div class="gs_r gs_or gs_scl">
       <div class="gs_ri">
-        <h3 class="gs_rt"><a>[图书] Deep learning</a></h3>
+        <h3 class="gs_rt"><a>[Book] Deep learning</a></h3>
         <div class="gs_a">I Goodfellow, Y Bengio, A Courville&nbsp;-&nbsp;2016&nbsp;-&nbsp;books.google.com</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
-    <!-- 出处被截得只剩一个词：靠 data-cid 去「引用」接口取完整刊名（预览服务器返回 test/cite/<cid>.html） -->
+
     <div class="gs_r gs_or gs_scl" data-cid="fixtureInfoSci">
       <div class="gs_ri">
         <h3 class="gs_rt"><a>Communication-efficient decentralized federated graph learning via knowledge distillation under dual heterogeneity</a></h3>
         <div class="gs_a">A Author, B Author, C Author, D Author…&nbsp;-&nbsp;Information&nbsp;…, 2026&nbsp;-&nbsp;Elsevier</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
-    <!-- 取回来的斜体是书名，和截断的出处对不上：不用 -->
+
     <div class="gs_r gs_or gs_scl" data-cid="fixtureBook">
       <div class="gs_ri">
-        <h3 class="gs_rt"><a>[图书] An example book chapter</a></h3>
+        <h3 class="gs_rt"><a>[Book] An example book chapter</a></h3>
         <div class="gs_a">A Author, B Author…&nbsp;-&nbsp;Information&nbsp;…, 2020&nbsp;-&nbsp;Springer</div>
-        <div class="gs_rs">摘要片段……</div>
+        <div class="gs_rs">Abstract excerpt…</div>
       </div>
     </div>
   </div>

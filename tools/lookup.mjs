@@ -1,4 +1,3 @@
-// 命令行自测：node tools/lookup.mjs "Multimedia Systems 30 (6), 351"
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,11 +12,10 @@ const rank = new globalThis.SRRanking({
   core: read('core.json'),
   journals: read('journals.json'),
   aliases: read('aliases.json'),
-  tags: read('tags.json'),
 });
 
 if (rank.missingAliases.length) {
-  console.warn('警告：以下别名指向了 CCF 目录里不存在的简称，已忽略：');
+  console.warn('Warning: ignored aliases pointing to missing conference acronyms:');
   for (const m of rank.missingAliases) console.warn('  ' + m);
 }
 
@@ -47,5 +45,5 @@ const samples = inputs.length ? inputs : [
 for (const s of samples) {
   const r = rank.lookup(s);
   const badges = rank.badges(r).map((b) => `[${b.text}]`).join(' ');
-  console.log(`\n${s}\n  matched: ${r.matchedName ?? '-'}  (via ${r.via ?? '-'})\n  ${badges || '(无)'}`);
+  console.log(`\n${s}\n  matched: ${r.matchedName ?? '-'}  (via ${r.via ?? '-'})\n  ${badges || '(none)'}`);
 }

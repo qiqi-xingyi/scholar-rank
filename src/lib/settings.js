@@ -1,62 +1,52 @@
-/** 扩展设置项的默认值、外观风格清单与读写封装（content script / options / popup 共用）。 */
+/** Shared defaults, appearance styles and Chrome sync storage for the content script, settings page and popup. */
 (function (root) {
   'use strict';
 
-  /** 可选外观风格。id 会拼成 CSS 类名 `sr-theme-<id>`，样式见 content/badges.css。 */
   const THEMES = [
-    { id: 'soft', name: '柔和填充', desc: '浅色底 + 深色字，和 Scholar 页面最贴合' },
-    { id: 'outline', name: '描边', desc: '透明底 + 彩色细边，最轻，不抢正文' },
-    { id: 'solid', name: '实心', desc: '饱和底 + 白字，最醒目' },
-    { id: 'minimal', name: '极简文字', desc: '去掉色块，只留彩色文字' },
-    { id: 'square', name: '方角标签', desc: '直角 + 左侧色条，偏工程风' },
-    { id: 'mono', name: '低调灰阶', desc: '统一灰色，只有预警保留红色' },
+    { id: 'soft', name: 'Clean', desc: 'A clear venue name with lightly separated metrics' },
+    { id: 'outline', name: 'Outline', desc: 'Transparent background with a colored border' },
+    { id: 'solid', name: 'Solid', desc: 'Bold color with white text' },
+    { id: 'minimal', name: 'Minimal', desc: 'Colored text without a background' },
+    { id: 'square', name: 'Square', desc: 'Square corners with a colored accent' },
+    { id: 'mono', name: 'Grayscale', desc: 'Neutral gray with clear contrast' },
   ];
 
   const DEFAULTS = {
     enabled: true,
 
-    // 生效位置
-    showOnProfile: true,   // 个人主页论文列表
-    showOnSearch: true,    // 搜索结果页
-    showOnDetail: true,    // 点开单篇论文的详情浮层
+    showOnProfile: true,
+    showOnSearch: true,
+    showOnDetail: true,
 
-    // 徽章开关
     showPreprint: true,
-    showTags: true,
-    showAbdc: true,
-    showAbs: true,
-    showAjg: true,
-    showUtd24: true,
-    showFt50: true,
-    showNsfcManagement: true,
-    showManagementEcon: true,
-    showNatureIndex: true,
+    showJournalName: true,
+    showConferenceName: true,
     showCcf: true,
     showCore: true,
     showTop: true,
-    showEi: true,
     showCas: true,
-    showJcr: false,
+    showJcr: true,
     showIf: true,
-    showWarn: true,
 
-    // 外观
-    theme: 'solid',
-    badgeScale: 100,       // 徽章字号百分比
-    boldBadges: false,     // 加粗徽章文字
+    theme: 'soft',
+    badgeScale: 100,
+    boldBadges: false,
 
-    // 作者识别
-    authorAliases: '',     // 每行一个姓名写法，用于补充一作识别
+    authorAliases: '',
 
-    // 其它
-    showUnmatched: false,  // 未匹配到的出处也显示一个灰色标记（排查用）
-    resolveTruncated: true, // 搜索结果里出处被截断又认不出时，向 Scholar 取一次完整刊名
+    showUnmatched: false,
+    resolveTruncated: true,
   };
 
-  /** 把设置里的 theme 转成 CSS 类名，非法值回落到默认风格。 */
   function themeClass(theme) {
     const id = THEMES.some((t) => t.id === theme) ? theme : DEFAULTS.theme;
     return 'sr-theme-' + id;
+  }
+
+  /** Apply the same size scaling to Scholar badges, settings previews and the popup. */
+  function applyBadgeScale(container, scale) {
+    const value = Number(scale);
+    container.style.setProperty('--sr-badge-scale', String(Number.isFinite(value) && value > 0 ? value / 100 : 1));
   }
 
   async function load() {
@@ -68,5 +58,5 @@
     await chrome.storage.sync.set(patch);
   }
 
-  root.SRSettings = { DEFAULTS, THEMES, themeClass, load, save };
+  root.SRSettings = { DEFAULTS, THEMES, themeClass, applyBadgeScale, load, save };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

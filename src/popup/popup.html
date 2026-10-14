@@ -1,41 +1,44 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>学术分级标注</title>
+  <title>Scholar Rank</title>
   <link rel="stylesheet" href="../content/badges.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <header>
-    <strong>学术分级标注</strong>
+    <strong>Scholar Rank</strong>
     <label class="switch">
-      <input type="checkbox" id="enabled">
+      <input type="checkbox" id="enabled" aria-label="Enable Scholar Rank">
       <span></span>
     </label>
   </header>
 
   <div class="preview">
     <div id="preview" class="sr-badges">
-      <span class="sr-badge sr-tag-rose">ML三大顶会</span>
+      <span class="sr-preview-label">Conference</span>
+      <span class="sr-badge sr-conference">CVPR</span>
       <span class="sr-badge sr-ccf-a">CCF A</span>
       <span class="sr-badge sr-core-astar">CORE A*</span>
-      <span class="sr-badge sr-top">计算机科学TOP</span>
-      <span class="sr-badge sr-ei">EI检索</span>
-      <span class="sr-badge sr-zone-1">SCI升级版 计算机科学1区</span>
+      <span class="sr-preview-label">Journal</span>
+      <span class="sr-badge sr-journal">TIFS</span>
+      <span class="sr-badge sr-top">TOP</span>
+      <span class="sr-badge sr-q1">JCR Q1</span>
+      <span class="sr-badge sr-zone-1">CAS 1</span>
       <span class="sr-badge sr-if">IF 8.7</span>
     </div>
   </div>
 
   <label class="field">
-    <span>外观风格</span>
+    <span>Appearance</span>
     <select id="theme"></select>
   </label>
 
   <div id="status" class="status">—</div>
 
   <footer>
-    <button id="openOptions">打开设置</button>
+    <button id="openOptions">Open settings</button>
   </footer>
 
   <script src="../lib/settings.js"></script>

@@ -24,7 +24,7 @@ body {
   padding: 32px 16px 64px;
   background: var(--bg);
   color: var(--fg);
-  font: 14px/1.6 Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font: 14px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 main { max-width: 680px; margin: 0 auto; }
@@ -55,9 +55,8 @@ section {
 .row.slider { align-items: center; gap: 14px; }
 .row.slider input { flex: 1; }
 .row.slider output { min-width: 48px; text-align: right; color: var(--muted); }
-.slider-label { flex: none; width: 68px; }
+.slider-label { flex: none; width: 85px; }
 
-/* 外观风格选择卡：每张卡直接用对应风格渲染一组样例徽章 */
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -100,35 +99,17 @@ section {
   border-radius: 6px;
   background: var(--bg);
   color: var(--fg);
-  font: 13px/1.5 Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font: 13px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .text-area:focus { outline: 2px solid #1a73e8; outline-offset: 1px; }
 
-.tag-list { margin: 2px 0 8px 26px; }
-.tag-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
-.tag-desc { font-size: 12px; color: var(--muted); }
-
-/*
- * 所有徽章预览都坐在一块浅色衬底上。Scholar 页面永远是浅色的，徽章配色也只按
- * 浅色底设计，所以深色模式下也必须用浅底来预览，否则看到的和实际效果对不上。
- */
 .theme-card .sr-badges,
-.probe-result .sr-badges,
-.tag-item {
-  background: #f3f4f6;
-  border-radius: 6px;
-  padding: 6px 8px;
+.probe-result .sr-badges {
+  background: #fafbfc;
+  border-radius: 8px;
+  padding: 8px;
 }
-
-.tag-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 3px 0;
-  width: fit-content;
-}
-.tag-item .tag-desc { color: #5f6368; }
 
 #probe {
   width: 100%;

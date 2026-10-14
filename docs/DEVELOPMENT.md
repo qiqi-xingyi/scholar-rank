@@ -1,178 +1,106 @@
-# 开发说明
+# Development guide
 
-面向想改代码、补数据或提 PR 的人。只是想装来用的话看 [README](../README.md) 就够了。
+Scholar Rank is a Manifest V3 Chrome/Edge extension built with plain JavaScript, HTML and CSS. The interface, documentation and tool output are in English. Original publication titles and source-language parser keys remain unchanged so multilingual source data can still be matched accurately.
 
-## 目录结构
+## Project structure
 
-```
-manifest.json                 MV3 清单
-icons/                        由 tools/make-icons.mjs 生成
-src/
-  lib/normalize.js            刊名归一化与候选名生成（浏览器 / Node 共用）
-  lib/ranking.js              查表与徽章生成（浏览器 / Node 共用）
-  lib/stats.js                个人主页统计、作者姓名匹配与筛选（浏览器 / Node 共用）
-  lib/settings.js             设置项默认值、外观风格清单
-  data/ccf.json               CCF 目录（构建产物）
-  data/core.json              CORE 会议分级（构建产物）
-  data/journals.json          分区 / IF / EI 合并数据集（构建产物）
-  data/aliases.json           Scholar 写法 → CCF/CORE 简称的人工别名表
-  data/tags.json              自定义标记（默认含「ML三大顶会」「数据库四大」）
-  content/scholar.js          页面注入
-  content/badges.css          徽章样式
-  options/                    设置页
-  popup/                      工具栏弹窗
-tools/
-  build-ccf.mjs               抓取并解析 ccf.atom.im
-  build-core.mjs              抓取 CORE 门户的 Export 接口
-  build-journals.mjs          抓取并合并分区表 / JCR / 预警 / EI
-  make-icons.mjs              手写 PNG 生成图标
-  selftest.mjs                匹配回归测试
-  lookup.mjs                  命令行单条查询
-  serve.mjs                   本地预览服务器
-test/
-  fixture.html                离线 DOM 预览页
-  chrome-shim.js              预览用的最小 chrome.* 垫片
-```
-
-## 匹配是怎么做的
-
-Scholar 上的出处写法非常不统一，所以匹配分五步，见
-[src/lib/normalize.js](../src/lib/normalize.js) 与 [src/lib/ranking.js](../src/lib/ranking.js)：
-
-1. **候选名生成** —— 剥掉卷期页码、`Proceedings of the`、届次与年份前缀、
-   IEEE 风格的前导「简称+年份」（`ICASSP 2026-2026 IEEE International Conference on …`）、尾部括号，
-   按逗号切段后生成一组由长到短的候选串；同时抽出括号里和开头的会议简称。
-2. **归一化** —— 去符号、展开常见缩写（`Trans.`→`transactions`、`J.`→`journal`…）、
-   丢掉 `the/of/and` 一类虚词、去空格，得到查表 key。建库和查库共用同一份代码，key 不会漂移。
-3. **查表** —— 会议先按归一化全称精确查，再按简称查（全称比三四个字母的简称可靠得多，
-   简称在 CCF 与 CORE 之间还会撞车，比如 `ATC` 两边指的不是同一个会）；期刊按归一化全称查。
-4. **截断兜底** —— Scholar 会把过长的出处截成 `… `，此时全称一定对不上。检测到省略号就退到
-   **唯一前缀匹配**：找出所有以该 key 开头的条目，只有唯一命中才认。截到只剩
-   `IEEE Transactions on …` 这种共同前缀时前缀不唯一，宁可不出徽章也不瞎猜。
-   作者一多，Scholar 连出处的开头也会截掉（`… on Pattern Analysis and …`），剩下的是名称
-   中间的一段，既不能当前缀也不能精确匹配，改走**片段匹配**：片段必须作为连续的词序列出现在
-   名称内部，比对时保留虚词（`on Pattern Analysis` 对不上 `Pattern Analysis and Applications`）；
-   CCF / CORE / 期刊库三套数据一起看，任何一套里对得上不止一个出处就都不认
-   （`… on Image Processing` 既是 TIP 也是 ICIP）。
-   截断后剩下的词恰好是某个完整名称时也不能直接认：`Information …` 更可能是 Information Sciences
-   而不是期刊 Information，只有没有别的名称以它开头才算精确匹配。省略号跟在卷期页码后面
-   （`… Intelligence 38 (5), 4321 …`）说明截掉的只是页码，不受这条限制。
-5. **模糊兜底** —— 会议全称仍然对不上时，用 token 集合包含度（≥0.85）做模糊匹配；
-   另有 [src/data/aliases.json](../src/data/aliases.json) 手工兜住
-   `Advances in Neural Information Processing Systems → NeurIPS`、
-   `Proceedings of the ACM on Management of Data → SIGMOD` 这类硬骨头。
-
-**截断到认不出时的补全**（[src/content/scholar.js](../src/content/scholar.js)）：搜索结果里的出处可能被截得
-只剩 `Information …`，上面几步都认不出。这时用结果条目上的 `data-cid` 请求 Scholar 的「引用」接口
-（`/scholar?q=info:<cid>:scholar.google.com/&output=cite`），取 MLA 格式里的斜体作为完整出处再查一遍。
-只对「被截断且三套数据都对不上」的条目请求，串行、间隔 400ms，结果按标签页缓存在 `sessionStorage`；
-一旦取不到引用格式（验证码 / 限流），本页不再尝试。取回的出处必须包含页面上那段被截断的文字才采用
-（图书条目的斜体是书名）。设置项 `resolveTruncated` 可关闭。
-
-CCF 与 CORE 共用同一套索引和匹配逻辑，别名表也共用 —— `names` / `acronyms` 里填的是 CCF 简称，
-`ccfToCore` 负责翻译成 CORE 的写法（`SIGKDD → KDD`、`S&P → SP`、`ACM MM → ACMMM` 等），
-`coreNames` 放只对 CORE 生效的别名（CCF 目录里没有的会议，如 WACV、CoRL）。
-同一简称对应多个会议时（`FSE` 在两套目录里都既是软件工程也是密码学会议），
-会用别名里的全称跟各候选比 token 重合度挑最贴的那个。
-
-**发现漏标 / 错标，绝大多数情况下只要往 `aliases.json` 里补一行就够了**，不用动代码。
-
-## 自定义标记
-
-[src/data/tags.json](../src/data/tags.json) 里的分组命中后排在所有徽章最前面，并且比其它徽章加粗一档。
-加一组只要追加一项：
-
-```json
-{
-  "id": "sec-top4",
-  "label": "安全四大",
-  "desc": "S&P / CCS / USENIX Security / NDSS",
-  "cls": "sr-tag-violet",
-  "ccf": ["S&P", "CCS", "USENIX Security", "NDSS"],
-  "core": ["SP", "CCS", "USENIX-Security", "NDSS"],
-  "names": []
-}
-```
-
-`ccf` / `core` 填两套目录里的简称（两边简称不一样时各填各的），`names` 填出处全称
-（归一化后匹配，用来兜住两套目录都没收的会议），三者任一命中即算。
-`cls` 可选 `sr-tag-rose` / `sr-tag-bronze` / `sr-tag-amber` / `sr-tag-violet` / `sr-tag-slate`。
-改完刷新扩展即可，不需要重新构建数据。
-
-## 外观风格
-
-样式分成两层，见 [src/content/badges.css](../src/content/badges.css)：每种徽章只声明
-`--sr-tint`（浅色底）和 `--sr-key`（主色）两个变量，风格类 `.sr-theme-*` 决定这两个变量怎么用。
-
-**加新风格只要追加一段 `.sr-theme-xxx` 规则，再往 [src/lib/settings.js](../src/lib/settings.js)
-的 `THEMES` 里加一行**，不用碰任何一种徽章的配色，设置页的选择卡和弹窗下拉框都会自动多出一项。
-
-## 测试
-
-```bash
-npm test                  # 109 项断言，含学位论文/二级轨道/截断歧义/标记误报和统计筛选用例
-npm run probe -- "IEEE Internet of Things Journal 11 (3), 4000-4012"
-```
-
-`selftest.mjs` 里有几类断言：`CASES`（必须出现的徽章）、`BYLINES`（搜索结果页 `.gs_a`
-整行文本走一遍拆分再查表）、`FORBIDDEN`（不允许出现的徽章，防止改动引入误报）、
-`NEGATIVE`（完全不该出徽章）。别名表里指向不存在简称的条目也会直接判失败。
-
-**改匹配逻辑或补别名后请跑一遍**，并把新场景补进对应的列表。
-
-## 本地预览
-
-不装扩展、不打开 Scholar 也能看渲染效果：
-
-```bash
-npm run serve
-```
-
-| 预览地址 | 内容 |
+| File or directory | Responsibility |
 | --- | --- |
-| <http://localhost:8123/test/fixture.html> | 复刻 Scholar 论文列表 / 搜索结果的 DOM，跑真实的 content script |
-| <http://localhost:8123/src/options/options.html?shim=1> | 设置页 |
-| <http://localhost:8123/src/popup/popup.html?shim=1> | 工具栏弹窗 |
+| `manifest.json` | Extension entry points, supported sites and permissions |
+| `src/lib/settings.js` | Shared settings, styles, size scaling and Chrome sync storage |
+| `src/lib/normalize.js` | Venue classification, normalization and candidate generation |
+| `src/lib/ranking.js` | CCF/CORE/journal indexes, aliases and badge descriptions |
+| `src/lib/stats.js` | Author-name recognition, summaries and filters |
+| `src/content/scholar.js` | Page annotation, profile statistics and automatic publication loading |
+| `src/content/badges.css` | Compact badge styles and the statistics panel |
+| `src/options/` | Full settings page and venue matching probe |
+| `src/popup/` | Toolbar popup and appearance preview |
+| `src/data/ccf.json` / `core.json` | Bundled conference directories; CCF also includes journals |
+| `src/data/journals.json` | Merged journal metrics and original source identities |
+| `src/data/aliases.json` | Curated conference spellings and selected journal display names |
+| `tools/` | Source-data builders, regression checks, packaging and local previews |
+| `test/` | Offline Scholar fixtures, citation responses and a Chrome API shim |
 
-预览服务器还模拟了 Scholar 的「引用」接口：`/scholar?q=info:<cid>:…&output=cite` 返回
-`test/cite/<cid>.html`，fixture 里带 `data-cid` 的两条结果用它演示截断出处的补全。
+Browser helpers expose `SRSettings`, `SRNorm`, `SRRanking` and `SRStats` on `globalThis`. Node tools reuse the same helpers, keeping lookup keys consistent with build-time normalization.
 
-`?shim=1` 会让预览服务器注入 `test/chrome-shim.js`（一套最小的假 `chrome.*` API，
-用 `localStorage` 顶替 `chrome.storage.sync`），只在预览时生效，不参与打包。
+## Venue matching
 
-预览地址还支持 `?theme=` / `?bold=1` / `?scale=` 指定外观，`?bare=1` 只留论文列表
-（README 里的效果图就是这么生成的）：
+1. Classify preprints, theses and patents before attempting rankings.
+2. Remove volume/issue/page suffixes, conference wrappers and year prefixes. Extract explicit acronyms and generate full-name candidates.
+3. Normalize punctuation, common abbreviations and stopwords using the same code as the data builders.
+4. Match conference names exactly before trying acronyms. For journals, use exact normalized names and curated aliases.
+5. For truncated names, accept only unique prefix or interior-fragment matches. Interior fragments preserve word order and check ambiguity across CCF, CORE and journal data. Never guess from a shared fragment such as “on Image Processing”.
+6. Untruncated conference names can use token containment of at least 0.85 as a fallback.
 
+Secondary tracks such as workshops, Findings and companion proceedings do not inherit a main conference ranking. Independently listed workshops remain supported.
+
+Search-result venues that are truncated and unmatched can optionally be completed using Scholar’s citation response. Requests are sequential, separated by 400 ms and cached in `sessionStorage`. If Scholar blocks the response, further requests stop for that page. A retrieved title must agree with the truncated text before it is used.
+
+## Maintaining aliases and names
+
+`aliases.json` includes:
+
+- `names`: full-name variants mapped to CCF acronyms. Use an object with `abbr` and `name` when an acronym is ambiguous, such as software-engineering FSE versus Fast Software Encryption.
+- `acronyms`: alternate CCF acronym spellings.
+- `ccfToCore`: conversions between directory spellings, such as SIGKDD to KDD.
+- `coreNames`: name variants specific to CORE.
+- `missingAcronyms`: corrections for blank source acronyms, currently including WHC.
+- `displayAcronyms`: canonical short labels for recognized conferences.
+- `extraConferences`: verified names absent from the bundled directories. These produce a name label only; no ranking is invented.
+- `journalNames`: selected journal names/acronyms with exact accepted aliases and optional source links.
+
+Journal names appear first, followed by JCR, CAS, IF and TOP status. A selected name must resolve to a bundled journal identity. Do not add broad aliases that could conflate related journals; PNAS Nexus must remain distinct from PNAS, and Nature Communications from Nature. The journal-name switch hides the name badge without hiding metrics.
+
+## Appearance and settings
+
+The default **Clean** style uses an emphasized venue name and compact 10.5 px metrics separated by dots. The badge reads `CAS 1` through `CAS 4`; its tooltip retains the broad category and source details. Alternative styles are defined by `.sr-theme-*` rules and listed in `SRSettings.THEMES`.
+
+Use `SRSettings.applyBadgeScale()` on badge containers. Scholar pages, settings previews and the popup share the same scaling behavior. Settings persist in `chrome.storage.sync`; supported changes clear and redraw the injected badges and statistics panel.
+
+Custom group tags, extra journal badge families and subcategory badges have been removed. Their legacy saved switches do not re-enable them.
+
+## Profile statistics
+
+Statistics cover currently loaded profile rows. CCF journal matching metadata remains available for summaries even though journal CCF badges are not displayed. Category filters hide nonmatching rows; totals continue to describe all loaded rows.
+
+First-author recognition combines the profile name, parenthetical aliases and configured aliases. It supports initial/surname matching and consecutive marked co-first authors. This is a name heuristic, not a unique author identifier.
+
+“Load all publications” clicks Scholar’s existing “Show more” control, waits for row growth and refreshes annotations. It supports cancellation, timeouts and a limit of 200 pages per run.
+
+## Checks and previews
+
+```sh
+npm test
+npm run probe -- "Nat. Commun."
+npm run serve
+npm run package
 ```
-http://localhost:8123/test/fixture.html?theme=outline
-http://localhost:8123/test/fixture.html?theme=solid&bold=1&scale=115
+
+`tools/selftest.mjs` covers positive matches, forbidden matches, truncation, page bylines and author/statistics logic. `tools/english-selftest.mjs` covers display defaults, journal identities, acronym aliases, English labels, removed options and tooltips. Add realistic positive and negative cases after changing matching logic or aliases.
+
+Local preview URLs:
+
+- `http://localhost:8123/test/fixture.html?theme=soft`
+- `http://localhost:8123/src/options/options.html?shim=1`
+- `http://localhost:8123/src/popup/popup.html?shim=1`
+
+The shim substitutes localStorage for Chrome storage and is used only in previews. Query parameters `theme`, `bold`, `scale` and `bare` control fixture appearance. Citation fixtures simulate Scholar responses for truncated-name tests.
+
+## Refreshing data
+
+```sh
+npm run build:ccf
+npm run build:core
+npm run build:journals
+npm run build
 ```
 
-## 更新数据
+The CCF builder fills missing source acronyms from curated corrections and writes English field labels. CORE uses the portal’s export endpoint; `CORE_SOURCE` selects another source version. The journal builder caches raw downloads under `tools/.cache/` and converts CAS broad-category metadata through `tools/cas-data.mjs`.
 
-各数据源都由构建脚本抓取，随时可以重新生成：
+Do not silently refresh the bundled data while changing display styles. Dataset versions are reported in Settings. Source-language headers, localized Scholar selectors and original publication names are intentional input compatibility, not translated interface text.
 
-```bash
-npm run build             # 全量重建（CCF + CORE + 期刊数据集 + 图标）
-npm run build:ccf         # 重新抓取 ccf.atom.im
-npm run build:core        # 重新抓取 CORE 会议分级
-npm run build:journals    # 重新抓取分区表 / JCR / 预警名单 / EI 目录
-```
+## Browser installation
 
-`build-core.mjs` 用的是 CORE 门户搜索页上那个 Export 按钮背后的 GET 接口，一次性导出全量，
-不需要翻页。换版本设环境变量即可（门户的 Source 下拉里能看到所有版本号）：
+For active development, open `chrome://extensions/`, enable Developer mode and use **Load unpacked** with the repository folder containing `manifest.json`. Reload the extension and refresh Scholar after editing runtime files.
 
-```bash
-CORE_SOURCE=CORE2023 npm run build:core
-```
-
-`build-journals.mjs` 会把原始文件缓存到 `tools/.cache/`，删掉该目录即可强制重新下载；
-换数据源或换年份时改脚本顶部的 `SOURCES` 即可。
-
-几个已知的数据现状：
-
-- **EI 目录是 2019 年版本**，公开可得的最新完整列表就到这里。拿到新版 Compendex source list 后，
-  整理成一行一个刊名的文本，替换 `SOURCES.ei` 即可。
-- 中科院分区表自 2026 年起不再更新发布，2025 版是最后一版。
-- CORE 里 `National: China`、`Regional`、`Unranked`、`Multiconference` 这类不代表学术水平的等级
-  不出徽章（ICASSP 在 ICORE2026 里就是 `Multiconference`）；`Australasian B/C` 显示为 `CORE 澳新B`。
+`npm run package` produces a clean unpacked folder and ZIP under `dist/`, containing only extension runtime files. Extract the ZIP before loading it. Browser deployment is separate from pushing source changes to GitHub.

@@ -1,82 +1,80 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>学术分级标注 · 设置</title>
+  <title>Scholar Rank · Settings</title>
   <link rel="stylesheet" href="../content/badges.css">
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <main>
-    <h1>学术分级标注 · 设置</h1>
+    <h1>Scholar Rank · Settings</h1>
 
     <section>
-      <h2>总开关</h2>
-      <label class="row"><input type="checkbox" data-key="enabled"><span>启用扩展</span></label>
+      <h2>Extension</h2>
+      <label class="row"><input type="checkbox" data-key="enabled"><span>Enable Scholar Rank</span></label>
     </section>
 
     <section>
-      <h2>生效位置</h2>
-      <label class="row"><input type="checkbox" data-key="showOnProfile"><span>个人主页论文列表</span></label>
-      <label class="row"><input type="checkbox" data-key="showOnSearch"><span>搜索结果 / 引用列表</span></label>
-      <label class="row"><input type="checkbox" data-key="showOnDetail"><span>单篇论文详情浮层</span></label>
-      <label class="row"><input type="checkbox" data-key="resolveTruncated"><span>补全被截断的出处<em>搜索结果里出处被截成「Information …」又认不出时，向 Scholar 取一次完整刊名（相当于替你点了「引用」）</em></span></label>
+      <h2>Where to show badges</h2>
+      <label class="row"><input type="checkbox" data-key="showOnProfile"><span>Profile publication lists</span></label>
+      <label class="row"><input type="checkbox" data-key="showOnSearch"><span>Search results / cited-by lists</span></label>
+      <label class="row"><input type="checkbox" data-key="showOnDetail"><span>Publication details</span></label>
+      <label class="row"><input type="checkbox" data-key="resolveTruncated"><span>Resolve truncated venues<em>If a truncated venue cannot be matched, retrieve its full name from Scholar’s citation format.</em></span></label>
     </section>
 
     <section>
-      <h2>一作识别</h2>
-      <p class="hint">通常会自动读取主页姓名。若论文中的姓名写法不同，可在下面每行填写一个别名。</p>
-      <textarea class="text-area" data-key="authorAliases" rows="4" placeholder="例：&#10;Kuiye Ding&#10;K Ding&#10;Ding Kuiye"></textarea>
-      <p class="hint field-note">作者列表首位计为一作；开头连续使用 *、#、† 或 ‡ 标注的作者计为共同一作。主页姓名括号内的别名会自动识别。</p>
+      <h2>First-author recognition</h2>
+      <p class="hint">The profile name is read automatically. Add alternative author names below, one per line.</p>
+      <textarea class="text-area" data-key="authorAliases" rows="4" placeholder="Example: &#10;Kuiye Ding&#10;K Ding&#10;Ding Kuiye"></textarea>
+      <p class="hint field-note">The first listed author is counted as first author. Consecutive authors at the beginning marked with *, #, † or ‡ are counted as co-first authors. Names in profile-name parentheses are recognized as aliases.</p>
     </section>
 
     <section>
-      <h2>显示哪些徽章</h2>
-      <label class="row"><input type="checkbox" data-key="showPreprint"><span>预印本标记<em>arXiv / bioRxiv / SSRN 等，提示未经同行评审</em></span></label>
-      <label class="row"><input type="checkbox" data-key="showTags"><span>自定义标记<em>在 src/data/tags.json 里增删，命中后排在最前面</em></span></label>
-      <div id="tagList" class="sr-badges tag-list"></div>
-      <label class="row"><input type="checkbox" data-key="showAbdc"><span>澳大利亚 ABDC 期刊 2025<em>A* / A / B / C</em></span></label>
-      <label class="row"><input type="checkbox" data-key="showAbs"><span>ABS 评级<em>Academic Journal Guide 2021，4* / 4 / 3 / 2 / 1</em></span></label>
-      <label class="row"><input type="checkbox" data-key="showAjg"><span>AJG 2024<em>Academic Journal Guide 2024，4* / 4 / 3 / 2 / 1</em></span></label>
-      <label class="row"><input type="checkbox" data-key="showUtd24"><span>UTD 24 TOP journal</span></label>
-      <label class="row"><input type="checkbox" data-key="showFt50"><span>FT50</span></label>
-      <label class="row"><input type="checkbox" data-key="showNsfcManagement"><span>国家自然科学基金委管理科学部重要期刊<em>A / B 类，共 30 种</em></span></label>
-      <label class="row"><input type="checkbox" data-key="showManagementEcon"><span>管理经济期刊（UTD24 + Econ 五大刊）</span></label>
-      <label class="row"><input type="checkbox" data-key="showNatureIndex"><span>177 种自然指数统计期刊（2026）</span></label>
-      <label class="row"><input type="checkbox" data-key="showCcf"><span>CCF 分级<em>CCF 推荐国际学术会议和期刊目录</em></span></label>
-      <label class="row"><input type="checkbox" data-key="showCore"><span>CORE 会议分级<em>澳大利亚 CORE Conference Rankings，A*/A/B/C</em></span></label>
-      <label class="row"><input type="checkbox" data-key="showTop"><span>中科院 TOP 期刊</span></label>
-      <label class="row"><input type="checkbox" data-key="showEi"><span>EI 收录</span></label>
-      <label class="row"><input type="checkbox" data-key="showCas"><span>中科院分区（升级版）</span></label>
-      <label class="row"><input type="checkbox" data-key="showJcr"><span>JCR 分区 Q1–Q4</span></label>
-      <label class="row"><input type="checkbox" data-key="showIf"><span>影响因子 IF</span></label>
-      <label class="row"><input type="checkbox" data-key="showWarn"><span>国际期刊预警名单</span></label>
-      <label class="row"><input type="checkbox" data-key="showUnmatched"><span>未匹配也显示灰色标记<em>排查匹配问题时打开</em></span></label>
+      <h2>Journal badges</h2>
+      <label class="row"><input type="checkbox" data-key="showJournalName"><span>Journal name / acronym<em>Names and abbreviations, such as PNAS, Nat. Commun. and Sci. Adv.</em></span></label>
+      <label class="row"><input type="checkbox" data-key="showJcr"><span>JCR quartile<em>Q1–Q4</em></span></label>
+      <label class="row"><input type="checkbox" data-key="showCas"><span>CAS broad-category tier<em>CAS 1–4; hover to see the full category</em></span></label>
+      <label class="row"><input type="checkbox" data-key="showIf"><span>Impact factor</span></label>
+      <label class="row"><input type="checkbox" data-key="showTop"><span>CAS TOP / Non-TOP status</span></label>
     </section>
 
     <section>
-      <h2>外观风格</h2>
-      <p class="hint">点一下就切换，Scholar 页面会立即跟着变。</p>
+      <h2>Conference badges</h2>
+      <label class="row"><input type="checkbox" data-key="showConferenceName"><span>Conference acronym<em>Canonical short names, such as CVPR, NeurIPS and KDD</em></span></label>
+      <label class="row"><input type="checkbox" data-key="showCcf"><span>CCF ranking<em>A / B / C, when listed in the bundled CCF directory</em></span></label>
+      <label class="row"><input type="checkbox" data-key="showCore"><span>CORE ranking<em>A* / A / B / C, when listed in the bundled CORE directory</em></span></label>
+    </section>
+
+    <section>
+      <h2>Other options</h2>
+      <label class="row"><input type="checkbox" data-key="showPreprint"><span>Preprint server labels</span></label>
+      <label class="row"><input type="checkbox" data-key="showUnmatched"><span>Show unmatched venues<em>Display a neutral label when there is no local match</em></span></label>
+    </section>
+
+    <section>
+      <h2>Appearance</h2>
+      <p class="hint">Choose a style. Open Scholar pages update immediately.</p>
       <div id="themeGrid" class="theme-grid"></div>
 
       <label class="row slider">
-        <span class="slider-label">徽章字号</span>
+        <span class="slider-label">Badge size</span>
         <input type="range" min="80" max="140" step="5" data-key="badgeScale">
         <output id="scaleOut">100%</output>
       </label>
-      <label class="row"><input type="checkbox" data-key="boldBadges"><span>加粗徽章文字</span></label>
+      <label class="row"><input type="checkbox" data-key="boldBadges"><span>Bold badge text</span></label>
     </section>
 
     <section>
-      <h2>匹配自测</h2>
-      <p class="hint">把 Google Scholar 上的出处原文粘进来，看看会命中什么。</p>
-      <input type="text" id="probe" placeholder="例：IEEE Transactions on Information Forensics and Security 19, 1-14">
+      <h2>Test a venue</h2>
+      <p class="hint">Paste a venue from Google Scholar to inspect its match and badges.</p>
+      <input type="text" id="probe" placeholder="Example: IEEE Transactions on Information Forensics and Security 19, 1-14">
       <div id="probeResult" class="probe-result"></div>
     </section>
 
     <section>
-      <h2>数据集</h2>
-      <div id="datasetInfo" class="dataset">加载中…</div>
+      <h2>Datasets</h2>
+      <div id="datasetInfo" class="dataset">Loading…</div>
     </section>
   </main>
   <script src="../lib/settings.js"></script>

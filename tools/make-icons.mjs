@@ -1,12 +1,10 @@
-// 生成扩展图标（无第三方依赖，直接手写 PNG）。
-// 用法: node tools/make-icons.mjs
 import { deflateSync } from 'node:zlib';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'icons');
-const SS = 4;                       // 超采样倍数，用于抗锯齿
+const SS = 4;
 const BG = [26, 115, 232];          // #1a73e8
 const BAR = [255, 255, 255];
 
@@ -54,9 +52,8 @@ function encodePNG(size, rgba) {
   ]);
 }
 
-/** 圆角矩形底 + 三根递增的柱子，象征分级。 */
 function sample(x, y, n) {
-  const r = n * 0.22;                       // 圆角半径
+  const r = n * 0.22;
   const inCorner = (cx, cy) => (x - cx) ** 2 + (y - cy) ** 2 > r * r;
   if (x < r && y < r && inCorner(r, r)) return null;
   if (x > n - r && y < r && inCorner(n - r, r)) return null;
@@ -92,7 +89,6 @@ function render(size) {
   const out = Buffer.alloc(size * size * 4);
   for (let i = 0; i < size * size; i++) {
     const a = acc[i * 4 + 3] / per;
-    // 预乘还原：颜色按覆盖到的子像素数平均
     const covered = acc[i * 4 + 3] / 255 || 1;
     out[i * 4] = Math.round(acc[i * 4] / covered);
     out[i * 4 + 1] = Math.round(acc[i * 4 + 1] / covered);
@@ -106,5 +102,5 @@ mkdirSync(OUT_DIR, { recursive: true });
 for (const size of [16, 32, 48, 128]) {
   const file = join(OUT_DIR, `icon${size}.png`);
   writeFileSync(file, encodePNG(size, render(size)));
-  console.log('写入', file);
+  console.log('Wrote', file);
 }

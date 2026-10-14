@@ -1,161 +1,104 @@
-/*
- * 分级徽章样式。
- *
- * 分成两层：
- *   1. 每种徽章只负责声明两个颜色变量 —— --sr-tint（浅色底）和 --sr-key（主色）；
- *   2. 外观风格 .sr-theme-* 决定这两个变量怎么用（填充 / 描边 / 实心 / 纯文字…）。
- * 加新风格时只要写一段 .sr-theme-xxx 规则，不用碰任何一种徽章的配色。
- */
-
+/* Compact badges with consistent typography and restrained semantic colors. */
 .sr-badges {
-  display: block;
-  margin: 2px 0 1px;
-  line-height: 1.6;
-  font-size: 11px;
-  font-family: Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin: 3px 0 2px;
+  line-height: 1.35;
+  font-size: calc(10.5px * var(--sr-badge-scale, 1));
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .sr-badges .sr-badge {
-  display: inline-block;
-  margin: 1px 4px 1px 0;
-  padding: 1px 7px;
-  border: 0;
-  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 1px 5px;
+  border: 1px solid color-mix(in srgb, var(--sr-key) 12%, transparent);
+  border-radius: 4px;
+  font-size: inherit;
   font-weight: 500;
-  white-space: nowrap;
-  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
   cursor: default;
-  --sr-tint: #eceff1;
-  --sr-key: #37474f;
+  --sr-tint: #f1f5f9;
+  --sr-key: #475569;
   background: var(--sr-tint);
   color: var(--sr-key);
 }
-
 .sr-badges.sr-bold .sr-badge { font-weight: 700; }
 
-/* ---------- 各类徽章的配色 ---------- */
+/* Conference names anchor the row; each ranking system has its own color family. */
+.sr-badges .sr-conference, .sr-badges .sr-journal { --sr-tint: #edf0f4; --sr-key: #334155; font-weight: 650; letter-spacing: .005em; }
+.sr-badges .sr-ccf-a { --sr-tint: #eaf1fc; --sr-key: #365b95; }
+.sr-badges .sr-ccf-b { --sr-tint: #f0f4fa; --sr-key: #536b8d; }
+.sr-badges .sr-ccf-c { --sr-tint: #f4f6fa; --sr-key: #606f85; }
+.sr-badges .sr-core-astar { --sr-tint: #e6f4f1; --sr-key: #287366; }
+.sr-badges .sr-core-a { --sr-tint: #edf6f3; --sr-key: #367467; }
+.sr-badges .sr-core-b { --sr-tint: #f1f6f4; --sr-key: #52746a; }
+.sr-badges .sr-core-c, .sr-badges .sr-core-aus { --sr-tint: #f3f6f5; --sr-key: #5c7169; }
 
-/* CCF 分级 */
-.sr-badges .sr-ccf-a { --sr-tint: #fbdedb; --sr-key: #b3261e; }
-.sr-badges .sr-ccf-b { --sr-tint: #fdeacd; --sr-key: #8a5200; }
-.sr-badges .sr-ccf-c { --sr-tint: #dde9fb; --sr-key: #1a4f9c; }
+/* Journal metrics: blue JCR, violet CAS, neutral IF and warm TOP status. */
+.sr-badges .sr-q1 { --sr-tint: #eaf1fc; --sr-key: #365b95; }
+.sr-badges .sr-q2 { --sr-tint: #eef3fa; --sr-key: #4d6890; }
+.sr-badges .sr-q3 { --sr-tint: #f2f5f9; --sr-key: #586c87; }
+.sr-badges .sr-q4 { --sr-tint: #f4f6f8; --sr-key: #606f85; }
+.sr-badges .sr-zone-1 { --sr-tint: #f0edfa; --sr-key: #665394; }
+.sr-badges .sr-zone-2 { --sr-tint: #f3f0fa; --sr-key: #705f94; }
+.sr-badges .sr-zone-3 { --sr-tint: #f5f3fa; --sr-key: #73668b; }
+.sr-badges .sr-zone-4 { --sr-tint: #f6f5f9; --sr-key: #6d667c; }
+.sr-badges .sr-if { --sr-tint: #f1f4f7; --sr-key: #4b6075; }
+.sr-badges .sr-top { --sr-tint: #fbf3e4; --sr-key: #8e6323; }
+.sr-badges .sr-non-top, .sr-badges .sr-preprint, .sr-badges .sr-none { --sr-tint: #f4f5f7; --sr-key: #666d7a; }
 
-/* 预印本：中性灰蓝，读起来是「还没评审」而不是「级别高低」 */
-.sr-badges .sr-preprint { --sr-tint: #e2e6eb; --sr-key: #4c5866; }
-
-/* 自定义标记（src/data/tags.json）：排在最前面，比其它徽章加粗一档以示区分 */
-.sr-badges .sr-tag { font-weight: 600; }
-.sr-badges.sr-bold .sr-tag { font-weight: 800; }
-
-.sr-badges .sr-tag-rose { --sr-tint: #f8cde9; --sr-key: #8a0f66; }
-.sr-badges .sr-tag-bronze { --sr-tint: #ecd9c2; --sr-key: #6b4218; }
-.sr-badges .sr-tag-amber { --sr-tint: #fbdf94; --sr-key: #6b4600; }
-.sr-badges .sr-tag-violet { --sr-tint: #ddd0f8; --sr-key: #5a1b9c; }
-.sr-badges .sr-tag-slate { --sr-tint: #dfe3e8; --sr-key: #3a4653; }
-
-/* 经管与综合期刊目录 */
-.sr-badges .sr-abdc { --sr-tint: #d8eee2; --sr-key: #176b45; }
-.sr-badges .sr-abs { --sr-tint: #dce7f7; --sr-key: #245493; }
-.sr-badges .sr-ajg { --sr-tint: #e8dcf7; --sr-key: #6232a0; }
-.sr-badges .sr-utd24 { --sr-tint: #fde4c8; --sr-key: #9b4d00; }
-.sr-badges .sr-ft50 { --sr-tint: #f5d7df; --sr-key: #8e2947; }
-.sr-badges .sr-nsfc-management { --sr-tint: #d4eceb; --sr-key: #12635f; }
-.sr-badges .sr-management-econ { --sr-tint: #fae7ae; --sr-key: #765400; }
-.sr-badges .sr-nature-index { --sr-tint: #f5d5d2; --sr-key: #a02b22; }
-
-/* CORE 会议分级：靛蓝系的深浅梯度，和 CCF 的红/橙/蓝拉开距离 */
-.sr-badges .sr-core-astar { --sr-tint: #dcdafb; --sr-key: #3730a3; }
-.sr-badges .sr-core-a { --sr-tint: #e3e6fd; --sr-key: #4a55c8; }
-.sr-badges .sr-core-b { --sr-tint: #e3ecf5; --sr-key: #3f6285; }
-.sr-badges .sr-core-c { --sr-tint: #eaedf0; --sr-key: #566270; }
-.sr-badges .sr-core-aus { --sr-tint: #eaedf0; --sr-key: #6b7580; }
-
-/* 中科院 TOP 期刊 */
-.sr-badges .sr-top { --sr-tint: #f9ccd4; --sr-key: #a01f42; }
-
-/* EI 收录 */
-.sr-badges .sr-ei { --sr-tint: #d8eed4; --sr-key: #2c6b2f; }
-
-/* 中科院分区（升级版）：1 区最重，4 区最轻 */
-.sr-badges .sr-zone-1 { --sr-tint: #e8dcf7; --sr-key: #5b2c9e; }
-.sr-badges .sr-zone-2 { --sr-tint: #d9e6fb; --sr-key: #1c4f9e; }
-.sr-badges .sr-zone-3 { --sr-tint: #dcefdd; --sr-key: #2a6b3c; }
-.sr-badges .sr-zone-4 { --sr-tint: #fbf0c4; --sr-key: #7d6001; }
-
-/* JCR 分区 */
-.sr-badges .sr-q1 { --sr-tint: #f9d9d5; --sr-key: #a8281c; }
-.sr-badges .sr-q2 { --sr-tint: #fdeacd; --sr-key: #8a5200; }
-.sr-badges .sr-q3 { --sr-tint: #dfeedd; --sr-key: #2c6b2f; }
-.sr-badges .sr-q4 { --sr-tint: #e4e7ea; --sr-key: #4a545c; }
-
-/* 影响因子 */
-.sr-badges .sr-if { --sr-tint: #c9eae4; --sr-key: #10645a; }
-
-/* 期刊预警 */
-.sr-badges .sr-warn { --sr-tint: #ffe0e0; --sr-key: #b3261e; }
-
-/* 排查用：未匹配 */
-.sr-badges .sr-none { --sr-tint: #f1f3f4; --sr-key: #80868b; }
-
-/* ---------- 外观风格 ---------- */
-
-/* 柔和填充（默认）：浅色底 + 深色字 */
+/* Clean default: one venue anchor, with quiet inline metrics rather than a row of colored boxes. */
+.sr-badges.sr-theme-soft { gap: 0; }
 .sr-badges.sr-theme-soft .sr-badge {
-  background: color-mix(in srgb, var(--sr-tint) 60%, var(--sr-key) 40%);
-  color: var(--sr-key);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #526071;
+  line-height: 1.4;
 }
+.sr-badges.sr-theme-soft .sr-badge + .sr-badge { margin-left: 6px; }
+.sr-badges.sr-theme-soft .sr-badge + .sr-badge::before {
+  content: "·";
+  margin-right: 6px;
+  color: #b6bfcb;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+.sr-badges.sr-theme-soft .sr-journal,
+.sr-badges.sr-theme-soft .sr-conference {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #eef2f7;
+  color: #27364b;
+  font-weight: 650;
+}
+.sr-badges.sr-theme-soft .sr-ccf, .sr-badges.sr-theme-soft .sr-jcr { color: #41618a; }
+.sr-badges.sr-theme-soft .sr-core { color: #426e62; }
+.sr-badges.sr-theme-soft .sr-cas { color: #635a79; }
+.sr-badges.sr-theme-soft .sr-top { color: #87632c; font-weight: 650; }
+.sr-badges.sr-theme-soft .sr-non-top { color: #6b7280; }
 
-/* 描边：透明底 + 彩色细边 */
 .sr-badges.sr-theme-outline .sr-badge {
   background: transparent;
   color: var(--sr-key);
-  border: 1px solid var(--sr-key);
-  border-color: color-mix(in srgb, var(--sr-key) 42%, transparent);
-  padding: 0 6px;
+  border-color: color-mix(in srgb, var(--sr-key) 35%, transparent);
 }
-
-/* 实心：饱和底 + 白字 */
-.sr-badges.sr-theme-solid .sr-badge {
-  background: var(--sr-key);
-  color: #fff;
-}
-
-/* 极简：去掉色块，只留彩色文字 */
-.sr-badges.sr-theme-minimal .sr-badge {
-  background: transparent;
-  color: var(--sr-key);
-  padding: 0;
-  margin-right: 12px;
-  border-radius: 0;
-  font-weight: 600;
-}
-.sr-badges.sr-theme-minimal.sr-bold .sr-badge { font-weight: 800; }
-
-/* 方角标签：直角 + 左侧色条 */
-.sr-badges.sr-theme-square .sr-badge {
-  background: var(--sr-tint);
-  color: var(--sr-key);
-  border-radius: 2px;
-  border-left: 3px solid var(--sr-key);
-  padding: 1px 6px 1px 5px;
-}
-
-/* 低调灰阶：统一灰色，只有预警保留红色 */
-.sr-badges.sr-theme-mono .sr-badge {
-  --sr-tint: #edeff1;
-  --sr-key: #3c4043;
-  background: var(--sr-tint);
-  color: var(--sr-key);
-}
-.sr-badges.sr-theme-mono .sr-warn {
-  --sr-tint: #ffe0e0;
-  --sr-key: #b3261e;
-}
-
-/* 详情浮层里跟在字段值后面 */
-#gsc_vcd_table .sr-badges { margin-top: 4px; }
-
-/* ---------- 个人主页右侧论文统计 ---------- */
+.sr-badges.sr-theme-solid .sr-badge { background: var(--sr-key); color: #fff; border-color: var(--sr-key); }
+.sr-badges.sr-theme-minimal .sr-badge { background: transparent; border: 0; padding: 1px 2px; border-radius: 0; }
+.sr-badges.sr-theme-square .sr-badge { border-radius: 3px; border-left: 2px solid var(--sr-key); }
+.sr-badges.sr-theme-mono .sr-badge { --sr-tint: #f3f4f6; --sr-key: #4b5563; }
+.sr-preview-label { flex-basis: 100%; color: #64748b; font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+#gsc_vcd_table .sr-badges { margin-top: 6px; }
 
 .sr-stats-panel {
   box-sizing: border-box;
@@ -166,7 +109,7 @@
   background: #fff;
   color: #202124;
   box-shadow: 0 2px 10px rgba(60, 64, 67, 0.15);
-  font: 13px/1.4 Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font: 13px/1.4 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   z-index: 1000;
 }
 
@@ -260,13 +203,13 @@
 .sr-stat[aria-pressed="true"] { box-shadow: inset 0 0 0 2px currentColor, 0 2px 5px rgba(60, 64, 67, 0.18); }
 .sr-stat[aria-disabled="true"] { cursor: not-allowed; opacity: 0.48; }
 
-.sr-stat-a { background: #fbdedb; color: #9f241d; }
-.sr-stat-b { background: #fdeacd; color: #805000; }
-.sr-stat-c { background: #dde9fb; color: #1a4f9c; }
-.sr-stat-z1 { background: #e8dcf7; color: #5b2c9e; }
-.sr-stat-z2 { background: #d9e6fb; color: #1c4f9e; }
-.sr-stat-z3 { background: #dcefdd; color: #2a6b3c; }
-.sr-stat-z4 { background: #fbf0c4; color: #705600; }
+.sr-stat-a { background: #f1f4f8; color: #456080; }
+.sr-stat-b { background: #f1f4f8; color: #456080; }
+.sr-stat-c { background: #f1f4f8; color: #456080; }
+.sr-stat-z1 { background: #f4f2f7; color: #685e7c; }
+.sr-stat-z2 { background: #f4f2f7; color: #685e7c; }
+.sr-stat-z3 { background: #f4f2f7; color: #685e7c; }
+.sr-stat-z4 { background: #f4f2f7; color: #685e7c; }
 
 .sr-stats-first {
   display: flex;
@@ -279,14 +222,14 @@
   padding: 8px 10px;
   border: 0;
   border-radius: 8px;
-  background: #e6f4ea;
-  color: #176b3a;
+  background: #f0f5f2;
+  color: #3e6555;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
 }
 .sr-stats-first strong { font-size: 19px; line-height: 1; }
-.sr-stats-first:hover:not([aria-disabled="true"]) { background: #d9efdf; }
+.sr-stats-first:hover:not([aria-disabled="true"]) { background: #e8f0eb; }
 .sr-stats-first:focus-visible { outline: 2px solid #1a73e8; outline-offset: 2px; }
 .sr-stats-first[aria-pressed="true"] { box-shadow: inset 0 0 0 2px currentColor, 0 2px 5px rgba(60, 64, 67, 0.18); }
 .sr-stats-first[aria-disabled="true"] { cursor: not-allowed; opacity: 0.48; }
@@ -300,7 +243,7 @@
   border-radius: 8px;
   background: #eef4fd;
   color: #185abc;
-  font: 600 11px/1.35 Roboto, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font: 600 11px/1.35 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   cursor: pointer;
 }
 .sr-load-all:hover:not(:disabled) { background: #e3edfc; border-color: #9bbce8; }
@@ -311,13 +254,3 @@
 .sr-stats-note { margin-top: 7px; color: #80868b; font-size: 10px; }
 
 .sr-row-filtered-out { display: none !important; }
-
-/* ---------- 这里故意没有 @media (prefers-color-scheme: dark) ----------
- *
- * Google Scholar 的页面永远是浅色的，跟系统主题无关。曾经按系统深色模式把徽章
- * 文字调亮，结果系统一开深色，Scholar 上就变成浅字压浅底，整排徽章直接看不见。
- *
- * 所以这套配色只按「浅色底」设计一次。设置页和弹窗虽然自己是深色的，但它们把
- * 徽章预览放在一块浅色衬底上（见 options.css / popup.css），既能看清，也保证
- * 预览效果和 Scholar 上真正看到的完全一致。
- */

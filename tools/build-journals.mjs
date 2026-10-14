@@ -1,25 +1,20 @@
-// 构建离线期刊数据集：中科院 / JCR / EI，以及经管与 Nature Index 期刊目录。
+/** Build the offline journal dataset from CAS/JCR sources and supplemental lists. Cache downloads; reuse the same title normalization as the extension. */
 //
-// 数据来源（均为公开仓库/公开目录，见 README「数据来源与免责声明」）：
-//   中科院分区表升级版 2025 / JCR 2025 / 预警名单 2025 -> github.com/hitfyd/ShowJCR
 //   EI Compendex Source List           -> github.com/HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST
 //   ABDC 2025 / AJG 2024               -> github.com/P-M-Ferreira/ranking
 //   ABS(AJG) 2021 / FT50                -> github.com/jusi-aalto/biz-journals
-//   UTD24 / Nature Index 2026           -> 官方清单（见 README）
 //
-// 用法: node tools/build-journals.mjs [输出路径]
-//   环境变量 CACHE_DIR 可指定原始文件缓存目录，避免重复下载。
 
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseCSV, toObjects, casMetadata } from './cas-data.mjs';
 import { ECON_TOP5, NATURE_INDEX_2026, NSFC_MANAGEMENT, UTD24 } from './journal-lists.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(process.argv[2] ?? join(__dirname, '..', 'src', 'data', 'journals.json'));
 const CACHE_DIR = process.env.CACHE_DIR ?? join(__dirname, '.cache');
 
-// 复用扩展里的归一化实现，保证建库 key 与查库 key 完全一致。
 (0, eval)(readFileSync(join(__dirname, '..', 'src', 'lib', 'normalize.js'), 'utf8'));
 const { normalizeName } = globalThis.SRNorm;
 
@@ -43,53 +38,12 @@ async function fetchCached(name, url) {
   mkdirSync(CACHE_DIR, { recursive: true });
   const file = join(CACHE_DIR, name);
   if (existsSync(file)) return readFileSync(file, 'utf8');
-  process.stderr.write(`下载 ${url}\n`);
+  process.stderr.write(`Downloading ${url}\n`);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   const text = await res.text();
   writeFileSync(file, text, 'utf8');
   return text;
-}
-
-/** 最小 CSV 解析器：支持引号包裹、引号内逗号与换行、"" 转义。 */
-function parseCSV(text) {
-  const rows = [];
-  let row = [];
-  let field = '';
-  let quoted = false;
-  const src = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
-  for (let i = 0; i < src.length; i++) {
-    const c = src[i];
-    if (quoted) {
-      if (c === '"') {
-        if (src[i + 1] === '"') { field += '"'; i++; } else quoted = false;
-      } else field += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ',') { row.push(field); field = ''; }
-    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else field += c;
-  }
-  if (field !== '' || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
-function toObjects(rows) {
-  const [header, ...body] = rows;
-  return body
-    .filter((r) => r.length > 1 && r.some((c) => c.trim()))
-    .map((r) => Object.fromEntries(header.map((h, i) => [h.trim(), (r[i] ?? '').trim()])));
-}
-
-/** "3 [168/495]" -> 3 */
-function zoneOf(s) {
-  const m = /^\s*([1-4])\b/.exec(s ?? '');
-  return m ? Number(m[1]) : 0;
-}
-
-/** " MATERIALS SCIENCE, MULTIDISCIPLINARY 材料科学：综合" -> "材料科学：综合" */
-function chineseTail(s) {
-  const m = /([一-龥][一-龥A-Za-z0-9：:·\-（）()]*)\s*$/.exec((s ?? '').trim());
-  return m ? m[1].trim() : '';
 }
 
 function cleanIssn(s) {
@@ -105,7 +59,6 @@ const [casText, jcrText, warnText, eiText, abdcText, absText, ajgText, ft50Text]
   Object.entries(SOURCES).map(([k, u]) => fetchCached(`${k}.txt`, u)),
 );
 
-/** key -> 记录。同 key 冲突时保留信息更完整的一条。 */
 const db = new Map();
 function slot(name) {
   const key = normalizeName(name);
@@ -115,7 +68,6 @@ function slot(name) {
   return rec;
 }
 
-// ---- 中科院分区表升级版 ----
 let casCount = 0;
 for (const r of toObjects(parseCSV(casText))) {
   const name = r['Journal'];
@@ -127,17 +79,10 @@ for (const r of toObjects(parseCSV(casText))) {
   if (cleanIssn(issn)) rec.issn = cleanIssn(issn);
   if (cleanIssn(eissn)) rec.eissn = cleanIssn(eissn);
   if (r['Web of Science']) rec.wos = r['Web of Science'];        // SCIE / SSCI / AHCI / ESCI
-  if (r['大类']) rec.cat = r['大类'];                             // 大类中文名，如「计算机科学」
-  const z = zoneOf(r['大类分区']);
-  if (z) rec.zone = z;                                           // 1/2/3/4 区
-  if (r['Top'] === '是') rec.top = 1;
-  const sub = chineseTail(r['小类1']);
-  const subZone = zoneOf(r['小类1分区']);
-  if (sub && subZone) rec.sub = [sub, subZone];
+  Object.assign(rec, casMetadata(r));
   casCount++;
 }
 
-// ---- JCR 影响因子 ----
 let jcrCount = 0;
 for (const r of toObjects(parseCSV(jcrText))) {
   const name = r['Journal'];
@@ -155,19 +100,16 @@ for (const r of toObjects(parseCSV(jcrText))) {
   jcrCount++;
 }
 
-// ---- 国际期刊预警名单 ----
 let warnCount = 0;
 for (const r of toObjects(parseCSV(warnText))) {
   const name = r['Journal'];
   if (!name) continue;
   const rec = slot(name);
   if (!rec) continue;
-  rec.warn = Object.values(r)[1] || '预警';
+  rec.warn = Object.values(r)[1] === '论文工厂' ? 'Paper mill' : 'Flagged journal';
   warnCount++;
 }
 
-// ---- EI Compendex 收录目录 ----
-// readme.md 里是一段用 ``` 包住的纯列表，每行一个出版物名（右侧有制表符填充）。
 let eiCount = 0;
 {
   const block = /```([\s\S]*?)```/.exec(eiText);
@@ -184,9 +126,6 @@ let eiCount = 0;
   }
 }
 
-// ---- 其它期刊分级 / 名单 ----
-// 这些目录的刊名写法不同（例如 Accounting Review / The Accounting Review），优先用 ISSN，
-// 再用规范化刊名和忽略开头 The 的刊名对齐。别名只保存 key -> 正式 key，不复制整条记录。
 const journalAliases = new Map();
 const canonicalKey = new Map();
 const byIssn = new Map();
@@ -296,18 +235,18 @@ for (const [k, v] of db) journals[k] = v;
 const payload = {
   generatedAt: new Date().toISOString().slice(0, 10),
   sources: {
-    cas: '中科院分区表升级版 2025（github.com/hitfyd/ShowJCR）',
-    jcr: 'JCR 2025 影响因子（github.com/hitfyd/ShowJCR）',
-    warn: '国际期刊预警名单 2025（github.com/hitfyd/ShowJCR）',
-    ei: 'EI Compendex Source List 2019（github.com/HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST）',
-    abdc: `ABDC Journal Quality List 2025（${abdcCount} 条）`,
-    abs: `ABS / Academic Journal Guide 2021（${absCount} 条）`,
-    ajg: `Academic Journal Guide 2024（${ajgCount} 条）`,
-    utd24: `UT Dallas 24（${UTD24.length} 种期刊）`,
-    ft50: `Financial Times FT50（${ft50Count} 种期刊）`,
-    nsfcManagement: `国家自然科学基金委管理科学部重要期刊（${nsfcCount} 种）`,
-    managementEcon: `管理经济期刊：UTD24 + 经济学五大刊（${UTD24.length + ECON_TOP5.length} 种）`,
-    natureIndex: `Nature Index 2026（${natureCount} 种期刊）`,
+    cas: 'CAS journal tiers 2025 (github.com/hitfyd/ShowJCR)',
+    jcr: 'JCR impact factors and quartiles 2025 (github.com/hitfyd/ShowJCR)',
+    warn: 'Journal warning list 2025 (github.com/hitfyd/ShowJCR)',
+    ei: 'EI Compendex Source List 2019 (github.com/HiddenStrawberry/EI-COMPENDEX-SOURCE-LIST)',
+    abdc: `ABDC Journal Quality List 2025 (${abdcCount} entries)`,
+    abs: `ABS / Academic Journal Guide 2021 (${absCount} entries)`,
+    ajg: `Academic Journal Guide 2024 (${ajgCount} entries)`,
+    utd24: `UT Dallas 24 (${UTD24.length} journals)`,
+    ft50: `Financial Times FT50 (${ft50Count} journals)`,
+    nsfcManagement: `NSFC management journals (${nsfcCount} journals)`,
+    managementEcon: `Management and economics: UTD24 + Econ Top 5 (${UTD24.length + ECON_TOP5.length} journals)`,
+    natureIndex: `Nature Index 2026 (${natureCount} journals)`,
   },
   count: db.size,
   aliases: Object.fromEntries(journalAliases),
@@ -320,9 +259,9 @@ writeFileSync(OUT, JSON.stringify(payload), 'utf8');
 const withZone = [...db.values()].filter((v) => v.zone).length;
 const withIf = [...db.values()].filter((v) => v.if != null).length;
 const withEi = [...db.values()].filter((v) => v.ei).length;
-console.log(`写入 ${OUT}`);
-console.log(`  记录总数 ${db.size}  (中科院 ${casCount} / JCR ${jcrCount} / 预警 ${warnCount} / EI ${eiCount})`);
+console.log(`Wrote ${OUT}`);
+console.log(`  Total records ${db.size} (CAS ${casCount} / JCR ${jcrCount} / warnings ${warnCount} / EI ${eiCount})`);
 console.log(`  ABDC ${abdcCount} / ABS ${absCount} / AJG ${ajgCount} / UTD24 ${UTD24.length} / FT50 ${ft50Count}`);
-console.log(`  国自然管理学部 ${nsfcCount} / UTD24+Econ5 ${UTD24.length + ECON_TOP5.length} / Nature Index ${natureCount}`);
-console.log(`  含大类分区 ${withZone}  含影响因子 ${withIf}  含 EI 标记 ${withEi}`);
-console.log(`  文件大小 ${(readFileSync(OUT).length / 1024 / 1024).toFixed(2)} MB`);
+console.log(`  NSFC management ${nsfcCount} / UTD24+Econ5 ${UTD24.length + ECON_TOP5.length} / Nature Index ${natureCount}`);
+console.log(`  With CAS tiers ${withZone}; with impact factors ${withIf}; with EI flags ${withEi}`);
+console.log(`  File size ${(readFileSync(OUT).length / 1024 / 1024).toFixed(2)} MB`);

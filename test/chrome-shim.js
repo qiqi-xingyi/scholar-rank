@@ -1,7 +1,4 @@
-/**
- * 最小 chrome.* 垫片，让扩展页面（options / popup）和 content script 能在普通网页里跑起来预览。
- * 仅供 tools/serve.mjs 的预览模式注入，不参与打包。
- */
+/** Minimal Chrome API shim for offline previews only. Store preferences in localStorage; do not include this file in the extension package. */
 (function () {
   'use strict';
   if (window.chrome && chrome.runtime && chrome.runtime.getURL) return;
@@ -9,7 +6,6 @@
   const store = JSON.parse(localStorage.getItem('sr-shim-store') || '{}');
   const listeners = [];
 
-  // 预览时可以用 ?theme=outline&bold=1 直接指定外观，方便逐个风格对比截图。
   const params = new URLSearchParams(location.search);
   if (params.has('theme')) store.theme = params.get('theme');
   if (params.has('bold')) store.boldBadges = params.get('bold') === '1';

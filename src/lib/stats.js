@@ -1,4 +1,4 @@
-/** Google Scholar 个人主页论文统计与作者姓名匹配（浏览器 / Node 共用）。 */
+/** Profile summaries, publication filters and heuristic first-author recognition. Supports initials, profile-name aliases and marked co-first authors. */
 (function (root) {
   'use strict';
 
@@ -25,11 +25,6 @@
     return signatures;
   }
 
-  /**
-   * Scholar 主页名经常把另一种写法放在括号里，例如
-   * "Jiawei Liu (刘嘉威)"。括号内容不是普通备注，而是可用于作者匹配的别名；
-   * 同时保留完整写法，避免改变已有的英文缩写匹配行为。
-   */
   function nameVariants(value) {
     const raw = String(value || '').trim();
     if (!raw) return [];
@@ -70,12 +65,10 @@
       .filter(Boolean);
     if (!parts.length) return [];
 
-    // 不同出版商会用星号、井号或 dagger 标记共同一作。
     const hasAsterisk = (name) => /[*＊∗★#＃†‡]/u.test(name);
     const cleanMarker = (name) => name.replace(/[*＊∗★#＃†‡]+/gu, ' ').replace(/\s+/g, ' ').trim();
     const names = [cleanMarker(parts[0])];
 
-    // 首位作者带星号时，紧随其后的连续星号作者都视为共同一作。
     if (hasAsterisk(parts[0])) {
       for (let i = 1; i < parts.length && hasAsterisk(parts[i]); i++) {
         names.push(cleanMarker(parts[i]));
@@ -88,7 +81,6 @@
     return firstAuthorNames(authorLine)[0] || '';
   }
 
-  /** Scholar 常把作者缩写成 “K Ding”，因此用姓氏 + 名字首字母匹配主页全名。 */
   function samePerson(a, b) {
     const left = personSignatures(a);
     const right = personSignatures(b);
@@ -117,10 +109,6 @@
     return true;
   }
 
-  /**
-   * @param {Array<{authors?:string,result?:object}>} entries
-   * @param {string|string[]} names Google Scholar 主页姓名及用户配置的别名
-   */
   function summarize(entries, names) {
     const authors = profileNames(names);
     const summary = {

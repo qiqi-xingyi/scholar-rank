@@ -1,9 +1,11 @@
-// 从 https://ccf.atom.im/ 抓取「中国计算机学会推荐国际学术会议和期刊目录」并生成离线 JSON。
-// 用法: node tools/build-ccf.mjs [输出路径]
-import { writeFileSync, mkdirSync } from 'node:fs';
+/** Build the offline CCF directory from ccf.atom.im and preserve curated missing-acronym corrections. */
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import '../src/lib/normalize.js';
+import '../src/lib/ranking.js';
 
 const SOURCE = 'https://ccf.atom.im/';
+const aliases = JSON.parse(readFileSync(new URL('../src/data/aliases.json', import.meta.url), 'utf8'));
 const OUT = resolve(process.argv[2] ?? 'src/data/ccf.json');
 
 function decodeEntities(s) {
@@ -22,7 +24,7 @@ function decodeEntities(s) {
 const html = await (await fetch(SOURCE)).text();
 
 const rows = html.match(/<tr class="item"[\s\S]*?<\/tr>/g) ?? [];
-if (rows.length === 0) throw new Error('未匹配到任何 <tr class="item">，页面结构可能已变化');
+if (rows.length === 0) throw new Error('No CCF item rows found; the source page may have changed');
 
 const entries = [];
 for (const row of rows) {
@@ -33,18 +35,18 @@ for (const row of rows) {
   if (!abbr && !name) continue;
   if (!/^[ABC]$/.test(rank)) continue;
   entries.push({
-    abbr,
+    abbr: abbr || aliases.missingAcronyms?.[name] || '',
     name,
     rank,
     type: type.includes('期刊') ? 'journal' : 'conference',
-    field,
+    field: globalThis.SRRanking.englishField(field),
     url,
   });
 }
 
 const payload = {
   source: SOURCE,
-  version: (html.match(/<title>([^<]*)<\/title>/) ?? [])[1] ?? 'CCF',
+  version: 'CCF recommended list',
   generatedAt: new Date().toISOString().slice(0, 10),
   count: entries.length,
   entries,
@@ -58,5 +60,5 @@ const stats = entries.reduce((acc, e) => {
   acc[k] = (acc[k] ?? 0) + 1;
   return acc;
 }, {});
-console.log(`写入 ${OUT}`);
-console.log(`共 ${entries.length} 条`, stats);
+console.log(`Wrote ${OUT}`);
+console.log(`${entries.length} entries`, stats);

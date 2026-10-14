@@ -1,6 +1,4 @@
-// 小型期刊集合直接固化在构建脚本旁，避免扩展运行时联网。
-// 大型的 ABDC / ABS / AJG / FT50 清单由 build-journals.mjs 下载并缓存。
-
+/** Supplemental journal lists used when building the merged dataset. Original publication titles are preserved for exact matching. */
 export const UTD24 = [
   'The Accounting Review',
   'Journal of Accounting and Economics',
@@ -36,7 +34,6 @@ export const ECON_TOP5 = [
   'The Review of Economic Studies',
 ];
 
-// 国家自然科学基金委员会管理科学部认定的 22 种 A 类、8 种 B 类重要期刊。
 export const NSFC_MANAGEMENT = {
   A: [
     '管理科学学报',
@@ -74,8 +71,6 @@ export const NSFC_MANAGEMENT = {
   ],
 };
 
-// 2026 Nature Index 官方 FAQ 当前列出的 177 种期刊；IROS 是另计的 1 种会议论文集，
-// 不放进“177 种自然指数统计期刊”徽章。Pediatrics 已不在当前 FAQ，MNRAS 主刊已列入。
 export const NATURE_INDEX_2026 = [
   'ACS Nano',
   'Academy of Management Journal',
@@ -257,5 +252,5 @@ export const NATURE_INDEX_2026 = [
 ];
 
 if (UTD24.length !== 24 || ECON_TOP5.length !== 5 || NATURE_INDEX_2026.length !== 177) {
-  throw new Error('固化期刊集合条目数异常');
+  throw new Error('Unexpected number of curated journal-list entries');
 }
