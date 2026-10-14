@@ -181,6 +181,11 @@
     const lead = LEAD_ACRONYM_YEAR.exec(text);
     if (lead && isAcronymToken(lead[1])) pushAcronym(lead[1]);
 
+    // Proceedings often use compact edition labels such as SC18 or SC'23.
+    // The ranking indexes still require the extracted acronym to be listed.
+    const compactLead = /^([A-Za-z][A-Za-z&-]{1,11})['’]?(?:(?:19|20)\d{2}|\d{2})(?=[:\s]|$)/.exec(stripWrappers(text));
+    if (compactLead && isAcronymToken(compactLead[1])) pushAcronym(compactLead[1]);
+
     const parts = text.split(',').map((p) => p.trim()).filter(Boolean);
     for (let i = parts.length; i >= 1; i--) {
       const prefix = parts.slice(0, i).join(', ');

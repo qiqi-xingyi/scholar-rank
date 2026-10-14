@@ -17,6 +17,30 @@ check('Default conference badges show acronym, CCF and CORE', () => {
   assert.deepEqual(texts('NeurIPS'), ['NeurIPS', 'CCF A', 'CORE A*']);
   assert.deepEqual(texts('WACV'), ['WACV', 'CORE A']);
 });
+check('SC historical titles and compact edition labels retain both conference ranks', () => {
+  for (const venue of [
+    'SC',
+    'Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis',
+    'Proceedings of the International Conference for High Performance Computing …',
+    'SC18: International Conference for High Performance Computing, Networking …',
+    "Proceedings of SC'23: International Conference for High Performance Computing …",
+    'SC2025: International Conference for High Performance Computing …',
+  ]) assert.deepEqual(texts(venue), ['SC', 'CCF A', 'CORE A'], venue);
+  for (const venue of ["Proceedings of the SC'23 Workshops of the International Conference on High …", 'SC18 Workshops']) {
+    assert.deepEqual(texts(venue), [], venue);
+  }
+  const hipc = rank.lookup('2010 International Conference on High Performance Computing, 1-10');
+  assert.equal(hipc.core.abbr, 'HiPC');
+  assert(!hipc.ccf);
+  assert.deepEqual(rank.badges(hipc).map(b => b.text), ['HiPC']);
+  const collision = new SRRanking({
+    ccf: { entries: [{ abbr: 'SC', name: 'Example Computing Conference', type: 'conference', rank: 'A' }] },
+    core: { entries: [{ abbr: 'SC', name: 'Different Science Conference', rank: 'B' }] },
+  });
+  assert(!collision.lookup('Example Computing Conference').core);
+  const disabled = new SRRanking(data, { showCore: false });
+  assert.deepEqual(disabled.badges(disabled.lookup('SC18: International Conference for High Performance Computing …')).map(b => b.text), ['SC', 'CCF A']);
+});
 check('Proceedings do not receive journal metrics', () => {
   assert.deepEqual(texts('Proceedings of the VLDB Endowment 16 (4), 700-712'), ['VLDB', 'CCF A', 'CORE A*']);
 });

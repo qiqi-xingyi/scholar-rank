@@ -387,8 +387,18 @@
           result.secondaryTrack = ccfSecondary;
           ccf = null;
         }
-        if (ccf) { result.ccf = ccf.entry; result.via = ccf.via; }
         let core = this.findConf(this.core, names, acronyms, cut) || frag.core;
+        // Once CCF identifies a conference, its exact canonical name can join the
+        // CORE directory even when the original citation uses a historical title.
+        // Do not join by acronym alone: different conferences can share one.
+        if (ccf && ccf.entry.type === 'conference') {
+          const entry = this.core.byKey.get(normalizeName(ccf.entry.name));
+          if (!core && entry) core = { entry, via: 'Canonical CCF conference name' };
+          // An exact CORE title outranks a conflicting fuzzy CCF guess. For
+          // example, HiPC's full title must not acquire SC's CCF A ranking.
+          if (core && entry && core.entry !== entry && ccf.via === 'Fuzzy name match' && core.via === 'Exact name match') ccf = null;
+        }
+        if (ccf) { result.ccf = ccf.entry; result.via = ccf.via; }
         const coreSecondary = core && secondaryTrackReason(raw, core.entry);
         if (coreSecondary) {
           result.secondaryTrack = result.secondaryTrack || coreSecondary;
