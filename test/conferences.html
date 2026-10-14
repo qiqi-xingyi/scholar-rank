@@ -14,6 +14,7 @@ const sources = [
  ['qce','2023 IEEE International Conference on Quantum Computing and Engineering (QCE …'],
  ['mlsys','Proceedings of Machine Learning and Systems 4, 251-264'],
  ['ppopp','Proceedings of the 22nd ACM SIGPLAN Symposium on Principles and Practice of …'],
+ ['sc','Proceedings of the International Conference for High Performance Computing …'],
  ['primary','2023 IEEE International Conference on …'],
  ['workshop','2023 IEEE International Conference on …'],
  ['unrelated','2023 IEEE International Conference on …'],
@@ -33,7 +34,7 @@ window.fetch=async(input,options)=>{
  if(url.pathname!='/citations')return originalFetch(input,options);
  document.querySelector('#requests').textContent=String(++requests);
  const id=url.searchParams.get('citation_for_view').split(':')[1];
- const known={ipdps:'2014 IEEE 28th International Parallel and Distributed Processing Symposium',dsn:'2022 52nd Annual IEEE/IFIP International Conference on Dependable Systems and Networks',qce:'2023 IEEE International Conference on Quantum Computing and Engineering (QCE)',ppopp:'Proceedings of the 22nd ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming'};
+ const known={sc:'Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis',ipdps:'2014 IEEE 28th International Parallel and Distributed Processing Symposium',dsn:'2022 52nd Annual IEEE/IFIP International Conference on Dependable Systems and Networks',qce:'2023 IEEE International Conference on Quantum Computing and Engineering (QCE)',ppopp:'Proceedings of the 22nd ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming'};
  const value=known[id]||(id==='primary'?'2023 IEEE International Conference on Distributed Computing Systems':id==='workshop'?'2023 IEEE International Conference on Distributed Computing Systems Workshops':'Nature');
  return {ok:id!=='blocked',url:url.href,text:async()=>`<div id="gsc_oci_table"><div class="gs_scl"><div class="gsc_oci_field">Conference</div><div class="gsc_oci_value">${value}</div></div></div>`};
 };

@@ -82,7 +82,7 @@
       const match = ranking.lookup(data.venue);
       // A hidden suffix may be a workshop or a different conference. Validate
       // truncated conference sources even when a shorter title has a local hit.
-      const detail = settings.resolveTruncated && match.kind === 'normal' && match.truncated && (!match.journal || match.ccf?.type === 'conference' || match.core || match.conference) && profileDetailUrl(row);
+      const detail = settings.resolveTruncated && match.kind === 'normal' && match.truncated && (!match.journal || !ranking.badges(match).length || match.ccf?.type === 'conference' || match.core || match.conference) && profileDetailUrl(row);
       if (!detail) { inject(row, data.venue, data.venueEl, true); continue; }
       row.dataset[MARK] = '1';
       const ticket = row.dataset[PENDING] = String(++pendingSeq);
