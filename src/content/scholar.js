@@ -68,7 +68,7 @@
     const venueEl = grays.length >= 2 ? grays[1] : grays[0];
     return {
       venueEl,
-      venue: venueEl ? venueTextOf(venueEl) : '',
+      venue: row.dataset.srUnverified ? '' : row.dataset.srResolvedVenue || (venueEl ? venueTextOf(venueEl) : ''),
       authors: grays.length >= 2 ? venueTextOf(grays[0]) : '',
     };
   }
@@ -79,7 +79,27 @@
       if (row.dataset[MARK]) continue;
       const data = profileRowData(row);
       if (!data || !data.venueEl || !data.venue) continue;
-      inject(row, data.venue, data.venueEl, true);
+      const match = ranking.lookup(data.venue);
+      // A hidden suffix may be a workshop or a different conference. Validate
+      // truncated conference sources even when a shorter title has a local hit.
+      const detail = settings.resolveTruncated && match.kind === 'normal' && match.truncated && (!match.journal || match.ccf?.type === 'conference' || match.core || match.conference) && profileDetailUrl(row);
+      if (!detail) { inject(row, data.venue, data.venueEl, true); continue; }
+      row.dataset[MARK] = '1';
+      const ticket = row.dataset[PENDING] = String(++pendingSeq);
+      cachedVenueOf('profile:' + detail.searchParams.get('citation_for_view'), () => fetchProfileVenue(detail)).then(full => {
+        if (!row.isConnected || row.dataset[PENDING] !== ticket || !settings.enabled || !settings.showOnProfile || !settings.resolveTruncated) return;
+        delete row.dataset[PENDING];
+        delete row.dataset[MARK];
+        const usable = full && SRNorm.venueCandidates(data.venue).names.some(v => SRNorm.completesTruncated(full, v));
+        if (usable) {
+          row.dataset.srResolvedVenue = full;
+          inject(row, full, data.venueEl, true);
+        } else {
+          row.dataset.srUnverified = '1';
+          row.dataset[MARK] = '1';
+        }
+        renderProfileStats();
+      });
     }
   }
 
@@ -398,6 +418,10 @@
   }
 
   function fullVenueOf(cid) {
+    return cachedVenueOf('cite:' + cid, () => fetchCiteVenue(cid));
+  }
+
+  function cachedVenueOf(cid, fetchVenue) {
     if (citeJobs.has(cid)) return citeJobs.get(cid);
     let stored = null;
     try { stored = sessionStorage.getItem(CITE_STORE_PREFIX + cid); } catch (err) {  }
@@ -405,8 +429,8 @@
     if (stored !== null) {
       job = Promise.resolve(stored);
     } else {
-      job = citeTail.then(() => fetchCiteVenue(cid)).then((venue) => {
-        if (!citeBlocked) {
+      job = citeTail.then(() => citeBlocked || !settings.enabled || !settings.resolveTruncated ? '' : fetchVenue()).then((venue) => {
+        if (venue && !citeBlocked) {
           try { sessionStorage.setItem(CITE_STORE_PREFIX + cid, venue); } catch (err) {  }
         }
         return venue;
@@ -422,15 +446,41 @@
     'journal', 'conference', 'source', 'book', 'publication',
   ]);
 
+  function detailRows(doc) {
+    return [...doc.querySelectorAll('#gsc_vcd_table .gs_scl, #gsc_oci_table .gs_scl')].map(row => ({
+      row,
+      field: row.querySelector('.gsc_vcd_field, .gsc_oci_field'),
+      value: row.querySelector('.gsc_vcd_value, .gsc_oci_value'),
+    })).filter(({ field, value }) => field && value && DETAIL_FIELDS.has(field.textContent.trim().toLowerCase()));
+  }
+
+  function profileDetailUrl(row) {
+    const link = row.querySelector('.gsc_a_at[href]');
+    if (!link) return null;
+    const url = new URL(link.getAttribute('href'), location.href);
+    if (url.origin !== location.origin || url.pathname !== '/citations' || url.searchParams.get('view_op') !== 'view_citation' || !url.searchParams.get('citation_for_view')) return null;
+    url.searchParams.set('hl', 'en');
+    return url;
+  }
+
+  async function fetchProfileVenue(url) {
+    if (citeBlocked) return '';
+    try {
+      const res = await fetch(url, { credentials: 'same-origin', signal: AbortSignal.timeout(8000) });
+      if (!res.ok || new URL(res.url).origin !== location.origin || new URL(res.url).pathname !== '/citations') { citeBlocked = true; return ''; }
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      if (doc.querySelector('#captcha-form, .g-recaptcha') || /\/sorry\//.test(res.url)) { citeBlocked = true; return ''; }
+      return detailRows(doc).map(({ value }) => value.textContent.replace(/\s+/g, ' ').trim()).find(Boolean) || '';
+    } catch (err) {
+      citeBlocked = true;
+      return '';
+    }
+  }
+
   function annotateDetail() {
     if (!settings.showOnDetail) return;
-    for (const row of document.querySelectorAll('#gsc_vcd_table .gs_scl')) {
+    for (const { row, value } of detailRows(document)) {
       if (row.dataset[MARK]) continue;
-      const field = row.querySelector('.gsc_vcd_field');
-      const value = row.querySelector('.gsc_vcd_value');
-      if (!field || !value) continue;
-      const name = field.textContent.trim().toLowerCase();
-      if (!DETAIL_FIELDS.has(name)) continue;
       const venue = venueTextOf(value);
       if (!venue) continue;
       inject(row, venue, value, false);

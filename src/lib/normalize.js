@@ -102,6 +102,14 @@
     return out;
   }
 
+  /** Ignore edition metadata only for conference title comparisons. */
+  function conferenceKey(input) {
+    return normalizeName(stripWrappers(input)
+      .replace(/\b\d{1,3}(?:st|nd|rd|th)\b/gi, ' ')
+      .replace(/\b(?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|annual)\b/gi, ' ')
+      .replace(/\b(?:IEEE|ACM|IFIP|EAI)\b/gi, ' '));
+  }
+
   function stripTrailingNumerics(s) {
     let out = String(s).trim();
     let prev = null;
@@ -187,12 +195,17 @@
     if (compactLead && isAcronymToken(compactLead[1])) pushAcronym(compactLead[1]);
 
     const parts = text.split(',').map((p) => p.trim()).filter(Boolean);
-    for (let i = parts.length; i >= 1; i--) {
+    // Commas inside a truncated title are meaningful: do not discard later
+    // words and mistake Networking, Architecture and Storage for Networking.
+    const minParts = truncatedName ? parts.reduce((last, part, i) => /[a-z]/i.test(part) ? i + 1 : last, 1) : 1;
+    for (let i = parts.length; i >= minParts; i--) {
       const prefix = parts.slice(0, i).join(', ');
       for (const base of [stripTrailingNumerics(prefix), prefix]) {
         if (!base) continue;
         pushName(base);
         pushName(base.replace(/\s*\([^()]*\)\s*$/, ''));
+        // A cut-off trailing acronym is metadata, not part of the title.
+        pushName(base.replace(/\s*\([^()]*$/, ''));
         const stripped = stripWrappers(base);
         pushName(stripped);
         pushName(stripped.replace(/\s*\([^()]*\)\s*$/, ''));
@@ -238,6 +251,6 @@
 
   root.SRNorm = {
     normalizeName, nameTokens, venueCandidates, venuesFromByline, completesTruncated,
-    classifyVenue, preprintSource, stripWrappers, stripTrailingNumerics,
+    classifyVenue, preprintSource, stripWrappers, stripTrailingNumerics, conferenceKey,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1,6 +1,6 @@
 {
   "name": "scholar-rank",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "Journal JCR quartiles, CAS broad-category tiers, impact factors and TOP status; conference acronyms, CCF and CORE rankings on Google Scholar.",
   "type": "module",
@@ -10,7 +10,7 @@
     "build:core": "node tools/build-core.mjs",
     "build:journals": "node tools/build-journals.mjs",
     "build:icons": "node tools/make-icons.mjs",
-    "test": "node tools/selftest.mjs && node tools/english-selftest.mjs",
+    "test": "node tools/selftest.mjs && node tools/english-selftest.mjs && node tools/conference-selftest.mjs",
     "probe": "node tools/lookup.mjs",
     "serve": "node tools/serve.mjs",
     "package": "node tools/package.mjs"

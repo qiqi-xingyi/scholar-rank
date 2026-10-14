@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
 
-  const { normalizeName, nameTokens, venueCandidates } = root.SRNorm;
+  const { normalizeName, nameTokens, venueCandidates, conferenceKey } = root.SRNorm;
 
   function tokensOf(name) {
     const raw = String(name || '')
@@ -94,9 +94,11 @@
       this.options = Object.assign({}, DEFAULTS, options);
       this.displayAcronyms = new Map(Object.entries(aliasData.displayAcronyms || {}).map(([from, to]) => [from.toUpperCase(), to]));
       this.extraConferences = new Map();
+      this.extraConferenceTitles = new Map();
       for (const entry of aliasData.extraConferences || []) {
         for (const name of [entry.name, entry.abbr, ...(entry.names || [])]) {
           this.extraConferences.set(normalizeName(name), entry);
+          this.extraConferenceTitles.set(conferenceKey(name), entry);
         }
       }
 
@@ -137,6 +139,7 @@
       const byKey = new Map();
       const fuzzy = [];
       const named = [];
+      const titlePairs = [];
       const addKey = (name, entry) => {
         const key = normalizeName(name);
         if (key && key.length >= 4 && !byKey.has(key)) byKey.set(key, entry);
@@ -160,7 +163,8 @@
           if (!byAbbr.has(label.toUpperCase())) byAbbr.set(label.toUpperCase(), e);
         }
 
-        const toks = tokensOf(e.name);
+        if (e.type !== 'journal') titlePairs.push([conferenceKey(bare), e]);
+        const toks = tokensOf(bare);
         if (toks.length >= 4) fuzzy.push({ entry: e, set: new Set(toks) });
       }
 
@@ -187,6 +191,7 @@
         const key = normalizeName(name);
         if (key) byKey.set(key, e);
         named.push([name, e]);
+        if (e.type !== 'journal') titlePairs.push([conferenceKey(name), e]);
       }
       for (const [from, abbr] of Object.entries(aliasData.acronyms || {})) {
         const e = resolve(abbr, null);
@@ -199,10 +204,11 @@
         const key = normalizeName(name);
         if (key) byKey.set(key, list[0]);
         named.push([name, list[0]]);
+        titlePairs.push([conferenceKey(name), list[0]]);
       }
 
       return {
-        byAbbr, byKey, fuzzy,
+        byAbbr, byKey, fuzzy, titlePairs,
         prefixPairs: Ranking.prefixPairs(byKey),
         infixItems: Ranking.infixItems(named, (e) => e.type === 'journal'),
       };
@@ -306,6 +312,15 @@
         const e = index.byAbbr.get(a);
         if (e) return { entry: e, via: `Acronym ${a}` };
       }
+      // Keep all candidates so publisher/edition removal cannot hide collisions.
+      if (!(cut && cut.head)) for (const n of names) {
+        const key = conferenceKey(n);
+        if (key.length < this.options.minPrefixLength) continue;
+        const candidates = index.titlePairs.filter(([k]) => cut ? k.startsWith(key) : k === key);
+        const entries = new Set(candidates.map(([, entry]) => entry));
+        if (entries.size > 1) return null;
+        if (entries.size === 1) return { entry: entries.values().next().value, via: 'Conference title without edition metadata' };
+      }
       if (cut) {
         for (const n of cut.head ? [] : names) {
           const key = normalizeName(n);
@@ -316,17 +331,19 @@
         return null;
       }
       if (!this.options.fuzzyConf) return null;
-      let best = null;
-      for (const n of names.slice(0, 6)) {
+      const matches = new Map();
+      for (const n of names) {
         const set = new Set(tokensOf(n));
         if (set.size < 4) continue;
         for (const cand of index.fuzzy) {
           const score = Ranking.containment(set, cand.set);
-          if (score >= 0.85 && (!best || score > best.score)) best = { entry: cand.entry, score, via: 'Fuzzy name match' };
+          const shared = [...set].filter(t => cand.set.has(t)).length;
+          const similarity = shared / (set.size + cand.set.size - shared);
+          if (score >= 0.85 && similarity >= 0.65 && similarity > (matches.get(cand.entry)?.similarity || 0)) matches.set(cand.entry, { entry: cand.entry, score, similarity, via: 'Fuzzy name match' });
         }
-        if (best && best.score === 1) break;
       }
-      return best;
+      const best = [...matches.values()].sort((a, b) => b.similarity - a.similarity);
+      return best.length && (!best[1] || best[0].similarity - best[1].similarity >= 0.08) ? best[0] : null;
     }
 
     findJournal(names, cut) {
@@ -366,7 +383,7 @@
       // Truncated text is insufficient; a retained explicit acronym can still identify the venue.
       const candidates = cut ? acronyms : [...names, ...acronyms];
       for (const candidate of candidates) {
-        const entry = this.extraConferences.get(normalizeName(candidate));
+        const entry = this.extraConferences.get(normalizeName(candidate)) || this.extraConferenceTitles.get(conferenceKey(candidate));
         if (entry) return entry;
       }
       return null;
@@ -380,6 +397,14 @@
       const result = { kind, raw, truncated, preprintName };
       const cut = truncated ? { head: truncatedHead, tail: truncatedTail, name: truncatedName } : null;
       if (kind === 'normal') {
+        const extra = this.findExtraConference(names, acronyms, cut);
+        if (extra && !secondaryTrackReason(raw, extra)) {
+          result.conference = extra;
+          result.matchedName = extra.name;
+          result.via = 'Verified conference name';
+          this.cache.set(raw, result);
+          return result;
+        }
         const frag = (cut && cut.head && this.findFragment(names, cut.tail)) || {};
         let ccf = this.findConf(this.ccf, names, acronyms, cut) || frag.ccf;
         const ccfSecondary = ccf && secondaryTrackReason(raw, ccf.entry);

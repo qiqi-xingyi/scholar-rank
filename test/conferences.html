@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Conference matching checks</title>
+<link rel="stylesheet" href="../src/content/badges.css">
+<style>body{font:13px/1.6 Arial,sans-serif;margin:28px;max-width:1050px}td{border-bottom:1px solid #eee;padding:10px}.gs_gray{color:#667085}.gsc_oci_field,.gsc_vcd_field{font-weight:600}</style></head>
+<body><h1>Conference matching checks</h1><p>Offline checks using the actual extension scripts. No requests go to Google Scholar.</p>
+<table id="gsc_a_b"><tbody id="cases"></tbody></table>
+<h2>Current detail page</h2><div id="gsc_oci_table"><div class="gs_scl"><div class="gsc_oci_field">Conference</div><div class="gsc_oci_value">2014 IEEE 28th International Parallel and Distributed Processing Symposium</div></div><div class="gs_scl"><div class="gsc_oci_field">Description</div><div class="gsc_oci_value">CVPR is mentioned here but is not this paper's venue.</div></div></div>
+<h2>Modal detail page</h2><div id="gsc_vcd_table"><div class="gs_scl"><div class="gsc_vcd_field">Book</div><div class="gsc_vcd_value">Proceedings of Machine Learning and Systems 4</div></div></div>
+<p>Detail request count: <output id="requests">0</output></p>
+<script>
+const sources = [
+ ['ipdps','2014 IEEE 28th International Parallel and Distributed Processing Symposium …'],
+ ['dsn','2022 52nd Annual IEEE/IFIP International Conference on Dependable Systems …'],
+ ['qce','2023 IEEE International Conference on Quantum Computing and Engineering (QCE …'],
+ ['mlsys','Proceedings of Machine Learning and Systems 4, 251-264'],
+ ['ppopp','Proceedings of the 22nd ACM SIGPLAN Symposium on Principles and Practice of …'],
+ ['primary','2023 IEEE International Conference on …'],
+ ['workshop','2023 IEEE International Conference on …'],
+ ['unrelated','2023 IEEE International Conference on …'],
+ ['blocked','2023 IEEE International Conference on …'],
+ ['afterblocked','2023 IEEE International Conference on …'],
+];
+for (const [id, venue] of sources) {
+ const row=document.createElement('tr');row.className='gsc_a_tr';row.id=id;
+ const cell=document.createElement('td');cell.className='gsc_a_t';
+ const a=document.createElement('a');a.className='gsc_a_at';a.textContent=id;a.href='/citations?view_op=view_citation&user=fixture&citation_for_view=fixture:'+id+':'+Date.now();cell.append(a);
+ for (const text of ['Example Author',venue]) {const div=document.createElement('div');div.className='gs_gray';div.textContent=text;cell.append(div)}
+ row.append(cell);document.querySelector('#cases').append(row);
+}
+const originalFetch=window.fetch.bind(window);let requests=0;
+window.fetch=async(input,options)=>{
+ const url=new URL(input,location.href);
+ if(url.pathname!='/citations')return originalFetch(input,options);
+ document.querySelector('#requests').textContent=String(++requests);
+ const id=url.searchParams.get('citation_for_view').split(':')[1];
+ const known={ipdps:'2014 IEEE 28th International Parallel and Distributed Processing Symposium',dsn:'2022 52nd Annual IEEE/IFIP International Conference on Dependable Systems and Networks',qce:'2023 IEEE International Conference on Quantum Computing and Engineering (QCE)',ppopp:'Proceedings of the 22nd ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming'};
+ const value=known[id]||(id==='primary'?'2023 IEEE International Conference on Distributed Computing Systems':id==='workshop'?'2023 IEEE International Conference on Distributed Computing Systems Workshops':'Nature');
+ return {ok:id!=='blocked',url:url.href,text:async()=>`<div id="gsc_oci_table"><div class="gs_scl"><div class="gsc_oci_field">Conference</div><div class="gsc_oci_value">${value}</div></div></div>`};
+};
+</script>
+<script src="chrome-shim.js"></script><script src="../src/lib/settings.js"></script><script src="../src/lib/normalize.js"></script><script src="../src/lib/ranking.js"></script><script src="../src/lib/stats.js"></script><script src="../src/content/scholar.js"></script>
+</body></html>

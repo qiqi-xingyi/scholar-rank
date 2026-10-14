@@ -21,7 +21,6 @@ check('SC historical titles and compact edition labels retain both conference ra
   for (const venue of [
     'SC',
     'Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis',
-    'Proceedings of the International Conference for High Performance Computing …',
     'SC18: International Conference for High Performance Computing, Networking …',
     "Proceedings of SC'23: International Conference for High Performance Computing …",
     'SC2025: International Conference for High Performance Computing …',
@@ -29,10 +28,12 @@ check('SC historical titles and compact edition labels retain both conference ra
   for (const venue of ["Proceedings of the SC'23 Workshops of the International Conference on High …", 'SC18 Workshops']) {
     assert.deepEqual(texts(venue), [], venue);
   }
+  // SC and HiPC share this normalized prefix; resolve the full profile source first.
+  assert.deepEqual(texts('Proceedings of the International Conference for High Performance Computing …'), []);
   const hipc = rank.lookup('2010 International Conference on High Performance Computing, 1-10');
   assert.equal(hipc.core.abbr, 'HiPC');
-  assert(!hipc.ccf);
-  assert.deepEqual(rank.badges(hipc).map(b => b.text), ['HiPC']);
+  assert.equal(hipc.ccf.abbr, 'HiPC');
+  assert.deepEqual(rank.badges(hipc).map(b => b.text), ['HiPC', 'CCF C']);
   const collision = new SRRanking({
     ccf: { entries: [{ abbr: 'SC', name: 'Example Computing Conference', type: 'conference', rank: 'A' }] },
     core: { entries: [{ abbr: 'SC', name: 'Different Science Conference', rank: 'B' }] },

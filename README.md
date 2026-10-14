@@ -42,7 +42,7 @@ The badge list is limited to the journal and conference metrics above. Removed o
 
 Profile statistics count currently loaded publications by CCF ranking, CAS tier and first authorship. Click a category to filter the list. **Load all publications** automatically clicks Scholar’s “Show more” button and can be stopped at any time. First-author recognition uses the profile name and configured aliases, including names in parentheses and marked co-first authors.
 
-Matching uses local bundled datasets. Optional truncated-venue resolution fetches Scholar’s own citation format when a venue cannot otherwise be identified. Those requests are queued, spaced apart and cached per tab.
+Matching uses local bundled datasets. Optional truncated-venue resolution checks profile conference sources against Scholar’s publication details and retrieves citation formats for unmatched search results. Those requests are queued, spaced apart and cached per tab.
 
 ## Development
 
@@ -74,6 +74,7 @@ npm run package                # Clean unpacked directory and ZIP under dist/
 Local previews:
 
 - `http://localhost:8123/test/fixture.html`
+- `http://localhost:8123/test/conferences.html`
 - `http://localhost:8123/src/options/options.html?shim=1`
 - `http://localhost:8123/src/popup/popup.html?shim=1`
 

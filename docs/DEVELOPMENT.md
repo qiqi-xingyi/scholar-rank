@@ -30,11 +30,11 @@ Browser helpers expose `SRSettings`, `SRNorm`, `SRRanking` and `SRStats` on `glo
 3. Normalize punctuation, common abbreviations and stopwords using the same code as the data builders.
 4. Match conference names exactly before trying acronyms. For journals, use exact normalized names and curated aliases.
 5. For truncated names, accept only unique prefix or interior-fragment matches. Interior fragments preserve word order and check ambiguity across CCF, CORE and journal data. Never guess from a shared fragment such as “on Image Processing”.
-6. Untruncated conference names can use token containment of at least 0.85 as a fallback.
+6. Compare conference titles without edition numbers, spelled-out ordinals or publisher tokens, retaining every candidate to detect collisions. Untruncated fuzzy matches require containment of at least 0.85, Jaccard similarity of at least 0.65 and a margin of at least 0.08 over competing conferences.
 
 Secondary tracks such as workshops, Findings and companion proceedings do not inherit a main conference ranking. Independently listed workshops remain supported.
 
-Search-result venues that are truncated and unmatched can optionally be completed using Scholar’s citation response. Requests are sequential, separated by 400 ms and cached in `sessionStorage`. If Scholar blocks the response, further requests stop for that page. A retrieved title must agree with the truncated text before it is used.
+Search-result venues that are truncated and unmatched can optionally be completed using Scholar’s citation response. Truncated conference sources in profiles use the linked same-origin publication details instead, even when a shorter title already matches, because a hidden suffix may identify workshops or a different conference; both current standalone and modal detail layouts are supported. Resolved profile sources also update statistics. If the details cannot be validated, the row receives no inferred venue ranking. Requests are sequential, separated by 400 ms and cached in `sessionStorage`. If Scholar blocks the response, further requests stop for that page. A retrieved title must agree with the truncated text before it is used.
 
 ## Maintaining aliases and names
 
@@ -76,11 +76,12 @@ npm run serve
 npm run package
 ```
 
-`tools/selftest.mjs` covers positive matches, forbidden matches, truncation, page bylines and author/statistics logic. `tools/english-selftest.mjs` covers display defaults, journal identities, acronym aliases, English labels, removed options and tooltips. Add realistic positive and negative cases after changing matching logic or aliases.
+`tools/selftest.mjs` covers positive matches, forbidden matches, truncation, page bylines and author/statistics logic. `tools/conference-selftest.mjs` covers real conference editions, source aliases, collisions and track exclusions. The browser fixture `test/conferences.html` covers profile detail completion, unrelated-response rejection, both detail layouts and stopping the request queue after a blocked response. `tools/english-selftest.mjs` covers display defaults, journal identities, acronym aliases, English labels, removed options and tooltips. Add realistic positive and negative cases after changing matching logic or aliases.
 
 Local preview URLs:
 
 - `http://localhost:8123/test/fixture.html?theme=soft`
+- `http://localhost:8123/test/conferences.html`
 - `http://localhost:8123/src/options/options.html?shim=1`
 - `http://localhost:8123/src/popup/popup.html?shim=1`
 

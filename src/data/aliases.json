@@ -94,7 +94,19 @@
     "ACM SIGSOFT Symposium on the Foundations of Software Engineering": {
       "abbr": "FSE",
       "name": "ACM International Conference on the Foundations of Software Engineering"
-    }
+    },
+    "ACM International Conference on Supercomputing": "ICS",
+    "ACM International Symposium on High Performance Distributed Computing": "HPDC",
+    "International Symposium on High-Performance Parallel and Distributed Computing": "HPDC",
+    "ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming": "PPoPP",
+    "Principles and Practice of Parallel Programming": "PPoPP",
+    "European Conference on Parallel Processing": "Euro-Par",
+    "International Performance Computing and Communications Conference": "IPCCC",
+    "Computer Software and Applications Conference": "COMPSAC",
+    "IEEE International Conference on High Performance Computing": "HiPC",
+    "International Conference on High Performance Computing": "HiPC",
+    "International Conference on Networking, Architecture and Storage": "NAS",
+    "IEEE International Conference on Computer Communications and Networks": "ICCCN"
   },
   "acronyms": {
     "NIPS": "NeurIPS",
@@ -113,7 +125,8 @@
     "Conference on Robot Learning": "CoRL",
     "Conference on Empirical Methods in Natural Language Processing": "EMNLP",
     "ACM SIGMOD-SIGACT-SIGAI Symposium on Principles of Database Systems": "PODS",
-    "Symposium on Principles of Database Systems": "PODS"
+    "Symposium on Principles of Database Systems": "PODS",
+    "IEEE International Symposium on On-Line Testing and Robust System Design": "IOLTS"
   },
   "ccfToCoreComment": "Map CCF acronym spellings to their CORE equivalents.",
   "ccfToCore": {
@@ -121,7 +134,8 @@
     "S&P": "SP",
     "ACM MM": "ACMMM",
     "USENIX Security": "USENIX-Security",
-    "ACM SIGOPS ATC": "USENIX"
+    "ACM SIGOPS ATC": "USENIX",
+    "Euro-Par": "EuroPar"
   },
   "missingAcronyms": {
     "IEEE World Haptics Conference": "WHC"
@@ -152,6 +166,50 @@
         "RSS Conference"
       ],
       "source": "https://roboticsconference.org/2025/"
+    },
+    {
+      "abbr": "MLSys",
+      "name": "Conference on Machine Learning and Systems",
+      "names": [
+        "Machine Learning and Systems",
+        "Proceedings of Machine Learning and Systems"
+      ],
+      "source": "https://proceedings.mlsys.org/"
+    },
+    {
+      "abbr": "DFTS",
+      "name": "IEEE International Symposium on Defect and Fault Tolerance in VLSI and Nanotechnology Systems",
+      "names": [],
+      "source": "https://www.dfts.org/"
+    },
+    {
+      "abbr": "SIMUtools",
+      "name": "International Conference on Simulation Tools and Techniques",
+      "names": [],
+      "source": "https://simutools.eai-conferences.org/2015/index.html"
+    },
+    {
+      "abbr": "HCII",
+      "name": "International Conference on Human-Computer Interaction",
+      "names": [
+        "HCI International"
+      ],
+      "source": "https://2026.hci.international/"
+    },
+    {
+      "abbr": "VAMR",
+      "name": "International Conference on Virtual, Augmented and Mixed Reality",
+      "names": [],
+      "source": "https://2026.hci.international/vamr"
+    },
+    {
+      "abbr": "CHASE (Health)",
+      "name": "IEEE/ACM Conference on Connected Health: Applications, Systems and Engineering Technologies",
+      "names": [
+        "ACM/IEEE International Conference on Connected Health: Applications, Systems and Engineering Technologies",
+        "IEEE/ACM International Conference on Connected Health: Applications, Systems and Engineering Technologies"
+      ],
+      "source": "https://conferences.computer.org/chase2025/"
     }
   ],
   "supplementComment": "Official conference names absent from the bundled directories. Recognition only: no CCF or CORE rank is inferred. Named alias objects disambiguate shared acronyms such as software-engineering FSE versus Fast Software Encryption.",
