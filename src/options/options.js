@@ -6,6 +6,8 @@
 
   const settings = await SRSettings.load();
   const backendConfig = await SRBackend.config();
+  const localPairing = chrome.storage.local ? await chrome.storage.local.get({ backendToken: '' }) : {};
+  backendConfig.backendToken = localPairing.backendToken || '';
   $('#backendEnabled').checked = !!backendConfig.backendEnabled;
   $('#backendToken').value = backendConfig.backendToken || '';
   $('#backendStatus').textContent = backendConfig.backendEnabled ? 'Automatic completion enabled on this device' : 'Automatic completion disabled';
@@ -24,6 +26,42 @@
     } catch (error) { $('#backendStatus').textContent = error.message + ' · Start the server with npm run backend'; }
     finally { button.disabled = false; }
   });
+  async function directApi(action, input) {
+    if (!chrome.runtime.sendMessage) throw new Error('Open the installed extension settings to configure completion');
+    const result = await chrome.runtime.sendMessage({ type: 'sr-direct-admin', action, input });
+    if (result?.error) throw new Error(result.error);
+    return result;
+  }
+  async function paintDirect() {
+    const { config } = await directApi('status');
+    $('#directEnabled').checked = config.directEnabled;
+    $('#agentEnabled').checked = config.agentEnabled;
+    $('#dailyLimit').value = config.dailyLimit;
+    $('#directStatus').textContent = `${config.directEnabled ? 'Browser-only mode enabled' : 'Browser-only mode disabled'} · DeepSeek key ${config.hasDeepseekKey ? 'saved' : 'not configured'} · No local server needed`;
+    return config;
+  }
+  async function saveDirect(input) {
+    await directApi('config', input);
+    $('#deepseekKey').value = '';
+    const config = await paintDirect();
+    if (config.hasDeepseekKey && config.agentEnabled) {
+      await directApi('check-key');
+      $('#directStatus').textContent = 'DeepSeek key verified · deepseek-flash · Browser-only mode ready. Refresh Scholar to start.';
+    }
+  }
+  $('#saveDirect').onclick = async () => {
+    const button = $('#saveDirect'); button.disabled = true;
+    try { await saveDirect({ directEnabled: $('#directEnabled').checked, agentEnabled: $('#agentEnabled').checked, deepseekKey: $('#deepseekKey').value.trim(), dailyLimit: Number($('#dailyLimit').value) }); }
+    catch (error) { $('#directStatus').textContent = error.message; }
+    finally { button.disabled = false; }
+  };
+  $('#setupFile').onchange = async () => {
+    const input = $('#setupFile'); input.disabled = true;
+    try { const file = input.files[0]; if (!file) return; if (file.size > 8192) throw new Error('Setup file must be smaller than 8 KB'); await saveDirect(JSON.parse(await file.text())); }
+    catch { $('#directStatus').textContent = 'Unable to import or verify setup. Use a valid private setup JSON file and check the network connection.'; }
+    finally { input.value = ''; input.disabled = false; }
+  };
+  paintDirect().catch(error => { $('#directStatus').textContent = error.message; });
   let theme = settings.theme;
 
   for (const el of inputs) {

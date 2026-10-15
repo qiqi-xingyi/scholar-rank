@@ -73,8 +73,23 @@
     </section>
 
     <section>
-      <h2>Local backend</h2>
-      <p class="hint">Complete publication sources with Crossref and OpenAlex, then look up rankings by verified identifiers. Publication titles, venues, authors, years and DOIs are sent to your local service; metadata queries may be forwarded to providers. Configure optional DeepSeek fallback in the local dashboard.</p>
+      <h2>Metadata completion</h2>
+      <p class="hint">Browser-only mode talks directly to Crossref and OpenAlex. DeepSeek helps only when normal lookup fails. Cache, missing records and imported rankings stay in this browser. No local server is required.</p>
+      <label class="row"><input id="directEnabled" type="checkbox"><span>Enable browser-only completion</span></label>
+      <label class="row"><input id="agentEnabled" type="checkbox"><span>Use DeepSeek fallback<em>Unresolved publication metadata is sent to DeepSeek. deepseek-flash, thinking disabled.</em></span></label>
+      <label for="deepseekKey">DeepSeek API key (stored on this device only)</label>
+      <input id="deepseekKey" type="password" autocomplete="new-password" placeholder="Leave blank to keep the saved key">
+      <label for="dailyLimit">Maximum DeepSeek calls per day (UTC)</label>
+      <input id="dailyLimit" type="number" min="0" max="1000" value="20">
+      <p><button type="button" id="saveDirect">Save &amp; check key</button> · <a href="../manage/index.html" target="_blank" rel="noopener">Manage missing records &amp; import rankings</a></p>
+      <label for="setupFile">Import private setup (one-time configuration)</label>
+      <input id="setupFile" type="file" accept=".json">
+      <p class="hint" id="directStatus" role="status">Browser-only completion is disabled.</p>
+    </section>
+
+    <section>
+      <h2>Optional local server</h2>
+      <p class="hint">Complete publication sources with Crossref and OpenAlex, then look up rankings by verified identifiers. Publication titles, venues, authors, years and DOIs are sent to your local service; metadata queries may be forwarded to providers. Use this only if you prefer the separate Node backend. Browser-only mode takes priority when enabled.</p>
       <label class="row"><input type="checkbox" id="backendEnabled"><span>Enable automatic completion</span></label>
       <label for="backendToken">Pairing token (stored on this device only)</label>
       <input id="backendToken" type="password" autocomplete="off" placeholder="Copy from the local dashboard">

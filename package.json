@@ -1,6 +1,6 @@
 {
   "name": "scholar-rank",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "description": "Journal JCR quartiles, CAS broad-category tiers, impact factors and TOP status; conference acronyms, CCF and CORE rankings on Google Scholar.",
   "type": "module",

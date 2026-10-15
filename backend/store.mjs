@@ -19,6 +19,7 @@ export class Store {
   }
   get(key, fallback = null) { const row = this.db.prepare('SELECT value FROM meta WHERE key=?').get(key); return row ? JSON.parse(row.value) : fallback; }
   set(key, value) { this.db.prepare('INSERT INTO meta VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key, JSON.stringify(value)); }
+  venueRows() { return this.db.prepare('SELECT value FROM metrics').all().map(row => JSON.parse(row.value)); }
   revision() { return this.get('revision', 0); }
   cached(key) {
     const row = this.db.prepare('SELECT value,expires,revision FROM cache WHERE key=?').get(key);

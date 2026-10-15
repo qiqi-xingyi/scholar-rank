@@ -575,7 +575,7 @@
     observe();
 
     chrome.storage.onChanged.addListener(async (_changes, area) => {
-      if (area !== 'sync' && !(area === 'local' && (_changes.backendEnabled || _changes.backendToken))) return;
+      if (area !== 'sync' && !(area === 'local' && (_changes.directEnabled || _changes.backendEnabled || _changes.backendToken || _changes.srDirectConfig))) return;
       settings = await SRSettings.load();
       ranking.options = Object.assign({}, ranking.options, settings);
       ranking.cache.clear();

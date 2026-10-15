@@ -36,7 +36,7 @@ export function createServer({ store = new Store(join(base, '.local/scholar-rank
       if (req.method === 'GET' && url.pathname === '/api/health') {
         const provided = req.headers['x-scholar-token'];
         if (provided && !same(provided, store.get('extensionToken')) && !same(provided, store.get('adminToken'))) return send(401, { error: 'Invalid pairing token' });
-        return send(200, { ok: true, paired: !!provided, version: '1.3.0', provider: ['Crossref','OpenAlex'], agentModel: 'deepseek-flash' });
+        return send(200, { ok: true, paired: !!provided, version: '1.4.0', provider: ['Crossref','OpenAlex'], agentModel: 'deepseek-flash' });
       }
       if (req.method === 'GET' && ['/', '/app.js', '/style.css', '/import-template.csv'].includes(url.pathname)) {
         if (extensionOrigin) return send(403, { error: 'Open the dashboard directly' });

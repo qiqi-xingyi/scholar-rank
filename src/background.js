@@ -1,19 +1,12 @@
-/* The service worker is the only extension context allowed to call loopback.
-   Provider API keys never enter extension storage or page messages. */
+import { createDirectService } from './lib/metadata/direct-service.js';
+import { createMessageHandler } from './lib/metadata/bridge.js';
+// Protect API keys from content scripts. Only extension pages/service workers
+// can access local settings; content scripts receive a non-secret status view.
+const trusted = chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+const direct = createDirectService();
+const handle = createMessageHandler(chrome, fetch, direct);
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
-  if (!['sr-backend-resolve', 'sr-backend-health'].includes(message?.type)) return;
-  (async () => {
-    const config = await chrome.storage.local.get({ backendEnabled: false, backendToken: '' });
-    if (message.type === 'sr-backend-resolve' && (!config.backendEnabled || !config.backendToken)) return { disabled: true };
-    const resolve = message.type === 'sr-backend-resolve';
-    const response = await fetch('http://127.0.0.1:8124/api/' + (resolve ? 'resolve' : 'health'), {
-      method: resolve ? 'POST' : 'GET', signal: AbortSignal.timeout(95000),
-      headers: { 'Content-Type': 'application/json', 'X-Scholar-Token': config.backendToken },
-      body: resolve ? JSON.stringify(message.publication) : undefined,
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Local backend request failed');
-    return result;
-  })().then(respond, error => respond({ error: error.message || 'Local backend unavailable' }));
+  if (!['sr-backend-config','sr-backend-resolve','sr-backend-health','sr-direct-admin'].includes(message?.type)) return;
+  trusted.then(() => handle(message,sender)).then(respond, error => respond({ error: /^(?:DeepSeek key check failed|This key does not list|Enter a DeepSeek|Invalid |Daily limit|Expected settings|Open the extension)/.test(error.message || '') ? error.message : 'Metadata request failed. Open Settings → Metadata completion to check the connection.' }));
   return true;
 });
