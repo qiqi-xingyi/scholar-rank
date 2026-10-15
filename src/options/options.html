@@ -73,6 +73,16 @@
     </section>
 
     <section>
+      <h2>Local backend</h2>
+      <p class="hint">Complete publication sources with Crossref and OpenAlex, then look up rankings by verified identifiers. Publication titles, venues, authors, years and DOIs are sent to your local service; metadata queries may be forwarded to providers. Configure optional DeepSeek fallback in the local dashboard.</p>
+      <label class="row"><input type="checkbox" id="backendEnabled"><span>Enable automatic completion</span></label>
+      <label for="backendToken">Pairing token (stored on this device only)</label>
+      <input id="backendToken" type="password" autocomplete="off" placeholder="Copy from the local dashboard">
+      <p><button type="button" id="connectBackend">Save &amp; test connection</button> · <a href="http://127.0.0.1:8124/" target="_blank" rel="noopener">Open local dashboard</a></p>
+      <p id="backendStatus" class="hint" role="status">Backend disabled</p>
+    </section>
+
+    <section>
       <h2>Datasets</h2>
       <div id="datasetInfo" class="dataset">Loading…</div>
     </section>
@@ -80,6 +90,7 @@
   <script src="../lib/settings.js"></script>
   <script src="../lib/normalize.js"></script>
   <script src="../lib/ranking.js"></script>
+  <script src="../lib/backend.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

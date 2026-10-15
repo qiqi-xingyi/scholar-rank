@@ -5,6 +5,25 @@
   const inputs = [...document.querySelectorAll('[data-key]')];
 
   const settings = await SRSettings.load();
+  const backendConfig = await SRBackend.config();
+  $('#backendEnabled').checked = !!backendConfig.backendEnabled;
+  $('#backendToken').value = backendConfig.backendToken || '';
+  $('#backendStatus').textContent = backendConfig.backendEnabled ? 'Automatic completion enabled on this device' : 'Automatic completion disabled';
+  $('#connectBackend').addEventListener('click', async () => {
+    const button = $('#connectBackend'); button.disabled = true;
+    try {
+      if (!chrome.storage.local) throw new Error('Open the installed extension settings to connect');
+      const token = $('#backendToken').value.trim();
+      const enabled = $('#backendEnabled').checked;
+      if (enabled && !/^[a-f0-9]{64}$/.test(token)) throw new Error('Paste the pairing token from the local dashboard');
+      await chrome.storage.local.set({ backendEnabled: enabled, backendToken: token });
+      if (!enabled) { $('#backendStatus').textContent = 'Automatic completion disabled on this device'; return; }
+      const health = await SRBackend.health();
+      if (enabled && !health.paired) throw new Error('Invalid pairing token');
+      $('#backendStatus').textContent = `Connected · Backend ${health.version} · ${enabled ? 'Automatic completion enabled' : 'Automatic completion disabled'}`;
+    } catch (error) { $('#backendStatus').textContent = error.message + ' · Start the server with npm run backend'; }
+    finally { button.disabled = false; }
+  });
   let theme = settings.theme;
 
   for (const el of inputs) {

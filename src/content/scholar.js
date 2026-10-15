@@ -13,6 +13,8 @@
   let loadAllRunning = false;
   let loadAllCancelled = false;
   let loadAllState = '';
+  let backendGeneration = 0;
+  let remoteResults = new WeakMap();
 
   async function loadJson(path) {
     const res = await fetch(chrome.runtime.getURL(path));
@@ -26,10 +28,13 @@
     return clone.textContent.replace(/\s+/g, ' ').trim();
   }
 
-  function buildBadges(venue) {
+  const BADGE_OPTIONS = { journal: 'showJournalName', conference: 'showConferenceName', jcr: 'showJcr', cas: 'showCas', if: 'showIf', top: 'showTop', ccf: 'showCcf', core: 'showCore' };
+
+  function buildBadges(venue, remote) {
     const result = ranking.lookup(venue);
-    const badges = ranking.badges(result);
+    const badges = remote?.identity ? remote.badges.filter(b => settings[BADGE_OPTIONS[b.key]]) : ranking.badges(result);
     if (!badges.length) {
+      if (remote?.identity) return null;
       if (!settings.showUnmatched || result.kind !== 'normal') return null;
       badges.push({ key: 'none', text: 'Unmatched', cls: 'sr-none', title: `No local dataset match: ${venue}` });
     }
@@ -47,29 +52,60 @@
     return box;
   }
 
-  function inject(host, venues, anchor, before) {
+  function publicationOf(host, venues) {
+    const profile = host.matches?.('tr.gsc_a_tr') ? host : host.closest?.('tr.gsc_a_tr');
+    const search = host.closest?.('.gs_r');
+    const titleNode = profile?.querySelector('.gsc_a_at') || search?.querySelector('.gs_rt') || document.querySelector('#gsc_oci_title, #gsc_vcd_title');
+    const title = titleNode ? venueTextOf(titleNode) : '';
+    const yearText = profile?.querySelector('.gsc_a_y')?.textContent || (search ? venues.join(' ') : '');
+    const year = /\b(18|19|20)\d{2}\b/.exec(yearText)?.[0];
+    const authors = profile ? profileRowData(profile)?.authors : search?.querySelector('.gs_a') ? venueTextOf(search.querySelector('.gs_a')).split(' - ')[0] : '';
+    const links = [...(search || host).querySelectorAll('a[href]')];
+    const doi = links.map(a => a.href.match(/^https?:\/\/(?:dx\.)?doi\.org\/(10\.\d{4,9}\/[^?#]+)/i)?.[1]).find(Boolean) || '';
+    return { title, venue: venues[0] || '', authors: authors || '', year: year ? Number(year) : null, doi };
+  }
+
+  function inject(host, venues, anchor, before, skipLocal = false) {
     if (host.dataset[MARK]) return;
     host.dataset[MARK] = '1';
     const list = Array.isArray(venues) ? venues : [venues];
     let box = null;
-    for (const v of list) {
-      box = buildBadges(v);
-      if (box) break;
-    }
-    if (!box) return;
-    if (before) anchor.parentNode.insertBefore(box, anchor);
-    else anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    if (!skipLocal) for (const v of list) { box = buildBadges(v); if (box) break; }
+    const place = () => { if (!box || !anchor.parentNode) return; if (before) anchor.parentNode.insertBefore(box, anchor); else anchor.parentNode.insertBefore(box, anchor.nextSibling); };
+    place();
+    if (!globalThis.SRBackend || !list.some(v => ranking.lookup(v).kind === 'normal')) return;
+    const publication = publicationOf(host, list);
+    if (!publication.title && !publication.doi) return;
+    const generation = backendGeneration;
+    SRBackend.resolve(publication).then(remote => {
+      if (!remote?.identity || !host.isConnected || generation !== backendGeneration || !settings.enabled) return;
+      remoteResults.set(host, remote);
+      if (box) box.remove();
+      box = buildBadges(list[0], remote); place();
+      if (host.matches?.('tr.gsc_a_tr')) renderProfileStats();
+    }).catch(() => {});
+  }
+
+  function remoteStatResult(remote) {
+    const result = { kind: 'normal' };
+    const metric = key => remote.metrics.find(m => m.scheme === key)?.value;
+    if (remote.identity.type === 'conference') {
+      if (metric('ccf')) result.ccf = { type: 'conference', rank: metric('ccf') };
+      result.conference = { name: remote.identity.name };
+    } else result.journal = { n: remote.identity.name, zone: metric('cas')?.zone };
+    return result;
   }
 
   function profileRowData(row) {
     const cell = row.querySelector('.gsc_a_t');
     if (!cell) return null;
     const grays = cell.querySelectorAll(':scope > .gs_gray');
-    const venueEl = grays.length >= 2 ? grays[1] : grays[0];
+    const venueEl = grays.length >= 2 ? grays[1] : null;
     return {
       venueEl,
+      rawVenue: venueEl ? venueTextOf(venueEl) : '',
       venue: row.dataset.srUnverified ? '' : row.dataset.srResolvedVenue || (venueEl ? venueTextOf(venueEl) : ''),
-      authors: grays.length >= 2 ? venueTextOf(grays[0]) : '',
+      authors: grays.length ? venueTextOf(grays[0]) : '',
     };
   }
 
@@ -78,7 +114,9 @@
     for (const row of document.querySelectorAll('#gsc_a_b tr.gsc_a_tr')) {
       if (row.dataset[MARK]) continue;
       const data = profileRowData(row);
-      if (!data || !data.venueEl || !data.venue) continue;
+      if (!data) continue;
+      if (!data.venueEl) { const title = row.querySelector('.gsc_a_at'); if (title) inject(row, '', title, false, true); continue; }
+      if (!data.venue) { if (data.rawVenue) inject(row, data.rawVenue, data.venueEl, true, true); continue; }
       const match = ranking.lookup(data.venue);
       // A hidden suffix may be a workshop or a different conference. Validate
       // truncated conference sources even when a shorter title has a local hit.
@@ -96,7 +134,7 @@
           inject(row, full, data.venueEl, true);
         } else {
           row.dataset.srUnverified = '1';
-          row.dataset[MARK] = '1';
+          inject(row, data.venue, data.venueEl, true, true);
         }
         renderProfileStats();
       });
@@ -228,7 +266,7 @@
       entries.push({
         row,
         authors: data ? data.authors : '',
-        result: data && data.venue ? ranking.lookup(data.venue) : null,
+        result: remoteResults.has(row) ? remoteStatResult(remoteResults.get(row)) : data && data.venue ? ranking.lookup(data.venue) : null,
       });
     }
     return entries;
@@ -363,7 +401,7 @@
     for (const meta of document.querySelectorAll('.gs_a')) {
       if (meta.dataset[MARK]) continue;
       const venues = SRNorm.venuesFromByline(venueTextOf(meta));
-      if (!venues.length) { meta.dataset[MARK] = '1'; continue; }
+      if (!venues.length) { inject(meta, '', meta, false, true); continue; }
       const cid = settings.resolveTruncated && truncatedUnmatched(venues) && citeIdOf(meta);
       if (!cid) { inject(meta, venues, meta, false); continue; }
 
@@ -500,6 +538,8 @@
   }
 
   function clearAll() {
+    backendGeneration++; remoteResults = new WeakMap();
+    globalThis.SRBackend?.reset();
     loadAllCancelled = true;
     activeProfileFilter = null;
     loadAllState = '';
@@ -535,7 +575,7 @@
     observe();
 
     chrome.storage.onChanged.addListener(async (_changes, area) => {
-      if (area !== 'sync') return;
+      if (area !== 'sync' && !(area === 'local' && (_changes.backendEnabled || _changes.backendToken))) return;
       settings = await SRSettings.load();
       ranking.options = Object.assign({}, ranking.options, settings);
       ranking.cache.clear();

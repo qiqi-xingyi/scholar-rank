@@ -14,7 +14,7 @@ rmSync(extensionRoot, { recursive: true, force: true });
 mkdirSync(extensionRoot);
 copyFileSync(join(projectRoot, 'manifest.json'), join(extensionRoot, 'manifest.json'));
 for (const directory of ['src', 'icons']) cpSync(join(projectRoot, directory), join(extensionRoot, directory), { recursive: true });
-const required = [manifest.options_page, manifest.action.default_popup, ...Object.values(manifest.icons)];
+const required = [manifest.background.service_worker, manifest.options_page, manifest.action.default_popup, ...Object.values(manifest.icons)];
 for (const script of manifest.content_scripts) required.push(...script.js, ...script.css);
 for (const name of ['ccf', 'core', 'journals', 'aliases']) required.push(`src/data/${name}.json`);
 for (const file of required) if (!existsSync(join(extensionRoot, file))) throw new Error(`Missing packaged resource: ${file}`);

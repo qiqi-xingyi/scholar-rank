@@ -22,9 +22,11 @@ createServer(async (req, res) => {
   let url = decodeURIComponent(path);
   const cite = url === '/scholar' && /(?:^|&)q=info:([\w-]+):/.exec(decodeURIComponent(query));
   if (cite) url = `/test/cite/${cite[1]}.html`;
+  if (url === '/') url = '/test/fixture.html';
+  if (!/^\/(?:test\/|src\/|icons\/|manifest\.json$)/.test(url)) { res.writeHead(404).end('Not found'); return; }
   const rel = normalize(url === '/' ? '/test/fixture.html' : url).replace(/^([/\\])+/, '');
   const file = join(ROOT, rel);
-  if (!file.startsWith(ROOT)) { res.writeHead(403).end('forbidden'); return; }
+  if (!file.startsWith(ROOT + '/') || !/^(?:test|src|icons)\//.test(rel) && rel !== 'manifest.json') { res.writeHead(403).end('forbidden'); return; }
   try {
     let body = await readFile(file);
     if (extname(file) === '.html' && /(^|&)shim=1(&|$)/.test(query)) {
@@ -36,7 +38,7 @@ createServer(async (req, res) => {
     res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
     res.end('404 ' + rel);
   }
-}).listen(PORT, () => {
+}).listen(PORT, '127.0.0.1', () => {
   console.log(`Publication preview: http://localhost:${PORT}/test/fixture.html`);
   console.log(`Settings preview:   http://localhost:${PORT}/src/options/options.html?shim=1`);
   console.log(`Popup preview:     http://localhost:${PORT}/src/popup/popup.html?shim=1`);

@@ -2,3 +2,7 @@ node_modules/
 tools/.cache/
 *.zip
 dist/
+.local/
+.env
+.env.*
+!.env.example
