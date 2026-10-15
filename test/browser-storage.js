@@ -1,4 +1,5 @@
 import { BrowserStore } from '../src/lib/metadata/browser-store.js';
+import { Providers } from '../src/lib/metadata/providers.js';
 import { parseImport } from '../src/lib/metadata/imports.js';
 document.querySelector('#run').onclick = async () => {
   const result = document.querySelector('#result'); result.textContent = 'Running…';
@@ -7,6 +8,9 @@ document.querySelector('#run').onclick = async () => {
   let settings = {};
   const storage = { get: async defaults => ({ ...defaults,...settings }), set: async patch => { settings = {...settings,...patch}; } };
   try {
+    const provider = new Providers({ gap:0, userAgent:false });
+    const response = await provider.json('/src/data/aliases.json');
+    if (!response.journalNames) throw Error('Native fetch failed');
     first = await new BrowserStore({database,storage}).open();
     await first.configure({directEnabled:true,agentEnabled:false,dailyLimit:1});
     first.importMetrics(parseImport([{type:'conference',name:'Synthetic Browser Storage Test',abbr:'TEST',year:2026,source:'Synthetic regression fixture',ccf:'C'}]),'Test');
@@ -20,7 +24,7 @@ document.querySelector('#run').onclick = async () => {
     if (second.venueRows().length !== 1) throw Error('Imported rankings did not survive restart');
     if (await second.reserveAgentCall(1)) throw Error('Daily budget did not survive restart');
     if (JSON.stringify(second.state).includes('srDirectConfig')) throw Error('Settings leaked into metadata');
-    result.textContent = 'PASS: real IndexedDB cache, missing records, ranking imports and daily budget survived restart. No local backend was used.';
+    result.textContent = 'PASS: native browser fetch and real IndexedDB cache, missing records, ranking imports and daily budget survived restart. No local backend was used.';
   } catch (error) { result.textContent = 'FAIL: ' + error.message; }
   finally { first?.db.close(); second?.db.close(); indexedDB.deleteDatabase(databaseName); }
 };

@@ -7,7 +7,8 @@ export class Providers {
       const delay = this.last + this.gap - Date.now(); if (delay > 0) await new Promise(r => setTimeout(r, delay));
       this.last = Date.now();
       for (let attempt = 0; attempt < 2; attempt++) {
-        const response = await this.fetcher(url, { ...options, signal: AbortSignal.timeout(10000), headers: { ...(this.userAgent ? { 'User-Agent': 'ScholarRank/1.4 (metadata resolver)' } : {}), ...options.headers } });
+        const fetcher = this.fetcher;
+        const response = await fetcher(url, { ...options, signal: AbortSignal.timeout(10000), headers: { ...(this.userAgent ? { 'User-Agent': 'ScholarRank/1.4 (metadata resolver)' } : {}), ...options.headers } });
         if (response.ok) return response.json();
         if ((response.status === 429 || response.status >= 500) && attempt === 0) {
           const seconds = Number(response.headers.get('retry-after'));

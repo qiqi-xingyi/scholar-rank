@@ -76,3 +76,9 @@ test('Provider outages do not consume the DeepSeek budget', async () => {
   const result=await service.run('resolve',{title:'A publication that cannot be looked up during a network outage'});
   assert.equal(result.status,'unavailable');assert.equal(result.agent,'provider_unavailable');assert.equal(paid,0);assert.equal((await service.run('status')).usage.calls,0);
 });
+
+test('Native browser fetch is called without a custom object receiver', async () => {
+  const { Providers } = await import('../../src/lib/metadata/providers.js');
+  const provider = new Providers({ gap:0, fetcher: function () { assert.equal(this,undefined); return Promise.resolve(Response.json({ok:true})); } });
+  assert.equal((await provider.json('https://api.crossref.org/works')).ok,true);
+});
